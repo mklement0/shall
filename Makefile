@@ -85,12 +85,13 @@ release: _need-ver _need-origin _need-npm-credentials _need-master-branch versio
 #  - Replaces the '### License' chapter with the contents of LICENSE.md
 #  - Replaces the '### npm Dependencies' chapter with the current list of dependencies.
 #  - Replaces the '## Changelog' chapter with the contents of CHANGELOG.md
-#  - Then uses `doctoc` to insert a TOC at the top.
+# !! Disabled for now, because the links generated are absolute ones that, when invoked on npmjs.com, take one to *GitHub*
+# # - Then uses `doctoc` to insert a TOC at the top.
+# @doctoc README.md >/dev/null || { echo "Failed to update read-me TOC." >&2; exit 1; }; \
+#  replace --count --quiet '^\*\*Table of Contents\*\*.*$$' '**Contents**' README.md | { fgrep -q ' (1)' || { echo "Failed to update heading of read-me TOC." >&2; exit 1; } }; \
 .PHONY: update-readme
 update-readme: _update-readme-usage _update-readme-license _update-readme-dependencies _update-readme-changelog
-	@doctoc README.md >/dev/null || { echo "Failed to update read-me TOC." >&2; exit 1; }; \
-	 replace --count --quiet '^\*\*Table of Contents\*\*.*$$' '**Contents**' README.md | { fgrep -q ' (1)' || { echo "Failed to update heading of read-me TOC." >&2; exit 1; } }; \
-	 echo "-- README.md updated."
+	@echo "-- README.md updated."
 
 # --------- Aux. targets
 
@@ -114,14 +115,14 @@ _update-readme-usage:
 	 newText=$$'\n```\n$$ '"$${CLI_HELP_CMD_DISPLAY[@]}"$$'\n\n'"$$( "$${CLI_HELP_CMD[@]}" )"$$'\n```\n' || { echo "Failed to update read-me chapter: usage: invoking CLI help failed: $${CLI_HELP_CMD[@]}" >&2; exit 1; }; \
 	 newText="$${newText//\$$/$$\$$}"; \
 	 newText="$${newText//~/\~}"; \
-	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_USAGE)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->[ \t]*\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: usage." >&2; exit 1; }
+	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_USAGE)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->\s*?\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: usage." >&2; exit 1; }
 
 #  - Replaces the '## License' chapter with the contents of LICENSE.md
 .PHONY: _update-readme-license
 _update-readme-license:
 	@newText=$$'\n'"$$(< LICENSE.md)"$$'\n'; \
 	 newText="$${newText//\$$/$$\$$}"; \
-	 replace --count --quiet --multiline=false '(^|\n)(## License\n)[\s\S]*?(\n([ \t]*<!-- .*? -->[ \t]*\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: license." >&2; exit 1; }
+	 replace --count --quiet --multiline=false '(^|\n)(## License\n)[\s\S]*?(\n([ \t]*<!-- .*? -->\s*?\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: license." >&2; exit 1; }
 
 
 #  - Replaces the dependencies chapter with the current list of dependencies.
@@ -144,7 +145,7 @@ _update-readme-dependencies:
 	 done)$$'\n'; \
 	 [[ -n $$newText ]] || { echo "Failed to determine npm dependencies." >&2; exit 1; }; \
 	 newText="$${newText//\$$/$$\$$}"; \
-	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_DEPENDENCIES)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->[ \t]*\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: npm dependencies." >&2; exit 1; }
+	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_DEPENDENCIES)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->\s*?\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: npm dependencies." >&2; exit 1; }
 
 #  - Replaces the changelog chapter with the contents of CHANGELOG.md
 .PHONY: _update-readme-changelog
@@ -153,7 +154,7 @@ README_HEADING_CHANGELOG := \#\# Changelog
 _update-readme-changelog:
 	@newText=$$'\n'"$$(tail -n +3 CHANGELOG.md)"$$'\n'; \
 	 newText="$${newText//\$$/$$\$$}"; \
-	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_CHANGELOG)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->[ \t]*\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: changelog." >&2; exit 1; }
+	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_CHANGELOG)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->\s*?\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: changelog." >&2; exit 1; }
 
 
 .PHONY: _need-master-branch

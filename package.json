@@ -28,6 +28,7 @@
     , "compatibility"
     , "POSIX"
     , "portable"
+    , "REPL"
   ],
   "author": "Michael Klement <mklement0@gmail.com> (http://same2u.net)",
   "license": "MIT",
