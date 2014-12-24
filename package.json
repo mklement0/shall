@@ -1,0 +1,41 @@
+{
+  "name": "shall",
+  "description": "A CLI for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.",
+  "private": false,
+  "version": "0.1.0",
+  "os": [
+    "!win32"
+  ],
+  "preferGlobal": true,
+  "bin": {
+    "shall": "bin/shall"
+  },
+  "homepage": "https://github.com/mklement0/shall",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mklement0/shall"
+  },
+  "bugs": {
+    "url": "https://github.com/mklement0/shall/issues"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "keywords": [
+      "shell"
+    , "cross-shell"
+    , "test"
+    , "compatibility"
+    , "POSIX"
+    , "portable"
+  ],
+  "author": "Michael Klement <mklement0@gmail.com> (http://same2u.net)",
+  "license": "MIT",
+  "devDependencies": {
+    "doctoc": "^0.7.1",
+    "json": "^9.0.2",
+    "replace": "^0.3.0",
+    "semver": "^4.1.0",
+    "urchin": "^0.0.5"
+  }
+}

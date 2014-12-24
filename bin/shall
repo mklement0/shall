@@ -1,0 +1,404 @@
+#!/usr/bin/env bash
+
+THIS_NAME=$(basename "$BASH_SOURCE")
+
+# Helper function for exiting with error message due to runtime error.
+#   die [errMsg [exitCode]]
+# Default error message states context and indicates that execution is aborted. Default exit code is 1.
+# Prefix for context is always prepended.
+# Note: An error message is *always* printed; if you just want to exit with a specific code silently, use `exit n` directly.
+die() {
+  echo "$THIS_NAME: ERROR: ${1:-"ABORTING due to unexpected error."}" 1>&2
+  exit ${2:-128} # Note: If the argument is non-numeric, the shell prints a warning and uses exit code 255.
+}
+
+# Helper function for exiting with error message due to invalid parameters.
+#   dieSyntax [errMsg]
+# Default error message is provided, as is prefix and suffix; exit code is always 2.
+dieSyntax() {
+  echo "$THIS_NAME: PARAMETER ERROR: ${1:-"Invalid parameter(s) specified."} Use -h for help." 1>&2
+  exit 129
+}
+
+# SYNOPSIS
+#   colorOutput colorNum [text ...]
+# DESCRIPTION
+#   Prints input in the specified color, which must be an ANSI color code (e.g., 31 for red),
+#   Uses stdin, if no arguments are specified.
+#
+#   If the variable kNO_COLOR is set, coloring is suppressed.
+#   An invoking script may set this in case output is NOT being sent to a terminal.
+#   (e.g., [[ -t 1  ]] || kNO_COLOR=1)
+colorOutput() {
+  local pre="\033[${1}m" post='\033[0m'
+  (( kNO_COLOR )) && { pre= post=; }
+  shift   
+  if (( $# )); then
+    printf "${pre}%s${post}" "$@"
+  else # stdin input
+    printf "$pre"
+    cat
+    printf "$post"
+  fi  
+}
+
+# SYNOPSIS
+#   colorCodeOutput exitCode  [text ...]
+# Colors text based on the specified exit code: if 0, green; otherwise, read.
+colorCodeOutput() {
+  (( $1 == 0 )) && green "${@:2}" || red "${@:2}"
+}
+
+# SYNOPSIS
+#  ... | colorIfFailed exitCode
+# Prints input red, if EXITCODE != 0; as is, otherwise.
+colorIfFailed() {
+  (( $1 == 0 )) && { (( $# > 1 )) && echo "$@" || cat; } || red "${@:2}"
+}
+
+green() {
+   colorOutput 32 "$@"
+}
+
+red() {
+   colorOutput 31 "$@"
+}
+
+blue() {
+   colorOutput 34 "$@"
+}
+
+underlineBlue() {
+  colorOutput '4;34' "$@"
+}
+
+
+statusMark() {
+  local mark=$(red '✗')
+  (( $1 == 0 )) && mark=$(green '✓')
+  printf '%s' "$mark"
+}
+
+# SYNOPSIS
+#   rreadlink symlink
+# DESCRIPTION
+#   Outputs the canonical path of the specified symlink's ultimate target.
+#   If the argument is not a symlink, its own canonical path is output.
+# NOTES
+#   Attempts to use `readlink`, which is found on most modern platforms (notable exception: HP-UX)
+#   If `readlink` is not available, output from `ls -l` is parsed, which is the only POSIX-compliant
+#   way to determine a symlink's target; caveat: if a filename contains literal ' -> ', this will break.
+# THANKS
+#   Gratefully adapted from http://stackoverflow.com/a/1116890/45375
+rreadlink() ( # execute function in a *subshell* to localize the effect of `cd`.
+
+  local target=$1 fname targetDir readlinkexe=$(command -pv readlink) CDPATH= 
+
+  while :; do # Resolve potential symlinks until the ultimate target is found.
+      [[ -L $target || -e $target ]] || { printf '%s\n' "$FUNCNAME: ERROR: '$target' does not exist." >&2; return 1; }
+      builtin cd "$(command -p dirname "$target")" # Change to target dir; necessary for correct resolution of target path.
+      fname=$(command -p basename "$target") # Extract filename.
+      if [[ -L $fname ]]; then
+        # Extract [next] target path, which is defined
+        # relative to the symlink's own directory.
+        if [[ -n $readlinkexe ]]; then # Use `readlink`.
+          target=$("$readlinkexe" "$fname")
+        else # `readlink` utility not available.
+          # Parse `ls -l` output, which is the only POSIX-compliant way
+          # to determine a symlink's target.
+          target=$(command -p ls -l "$fname")
+          target=${target#* -> }
+        fi
+        continue # Resolve [next] symlink target.
+      fi
+      break # Ultimate target reached.
+  done
+  targetDir=$(builtin pwd -P) # Get canonical dir. path
+  # Output the ultimate target's canonical path.
+  printf '%s\n' "${targetDir%/}/$fname"
+
+)
+
+# --------- Constants
+
+# The shells to target by default, if installed.
+kDEFAULT_SHELLS=( sh dash bash zsh ksh )
+
+kREPL_HISTFILE=~/".${THIS_NAME}_history"
+
+# ----------
+
+# Command-line help.
+if [[ $1 == '--help' || $1 == '-h' ]]; then
+  cat <<EOF
+SYNOPSIS
+  $THIS_NAME [-l shellA,...] [-q|-Q] script [arg ...]
+  $THIS_NAME [-l shellA,...] [-q|-Q] -c command_string [arg0 arg ...]
+  $THIS_NAME [-l shellA,...] [-q|-Q] [-s arg ...]
+  $THIS_NAME [-l shellA,...]  -i
+
+DESCRIPTION
+  Invokes a shell script or command with multiple POSIX-like shells in
+  sequence for cross-shell compatibility testing.
+
+  Pass a *script filename* as the first operand, optionally followed by 
+  arguments to pass to the script.
+  If $THIS_NAME is in your PATH, you can also create executable scripts
+  based on it by using the following shebang line:
+    #!/usr/bin/env $THIS_NAME
+  
+  Use -c to specify a *command string* instead; note that the first argument
+  after the command string is assigned to \$0(!).
+  
+  Use -s to read from *stdin*; -s is optional, if no arguments are passed.
+  
+  Use -i to enter *interactive mode*: a simple REPL, where one command
+  at a time is read from the terminal and executed.
+
+  By default, the following shells - if installed - are targeted:
+    $(sed 's/ /, /g' <<<"${kDEFAULT_SHELLS[@]}")
+
+  To specify shells explicitly, use either of the following (in order of
+  precedence):
+   - Option -l shellA,...; e.g., $THIS_NAME -l bash,zsh ...
+   - Environment variable 'SHELLS'; e.g.: SHELLS=bash,zsh $THIS_NAME ...
+
+  -q, -Q
+    Quiet modes: 
+     -q suppresses stdout output from the command/script invoked.
+     -Q suppresses both stdout and stderr.
+
+NOTES
+  Output is selectively colored, but only when outputting to a terminal.
+  
+  Timing information is reported for each shell.
+  
+  In interactive mode (i), history is maintained in file ${kREPL_HISTFILE/#$HOME/~}
+  
+  To get the name of the running shell from within your code in any of the
+  invocation scenarios, use:
+    \$(ps -o comm= \$\$)
+  When using a command string (-c) or stdin input (-s), you can also
+  use \$0
+
+  The exit code reflects the number of shells that reported failure; i.e.,
+  it is 0 if all shells ran the command successfully.
+
+EXAMPLES
+    # Echo the name of executing shell.
+  $THIS_NAME -c 'echo "Hello from \$0."'
+    # Also echo the 1st argument passed.                
+  echo 'echo "Passed to \$0: \$1"' | $THIS_NAME -s one
+    # Print the type of the 'which' command in bash and zsh.
+  $THIS_NAME -l bash,zsh -c 'type which'
+    # Enter a REPL that evaulates commands in both bash and dash.
+  SHELLS=bash,dash $THIS_NAME -i
+  
+EOF
+    exit 0
+fi
+
+# Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
+[[ $1 == '--version' ]] && { ver="v0.1.0"; echo "$THIS_NAME version ${ver#v}"; exit 0; }
+
+while getopts l:qQcsi opt; do  # $opt will receive the option *letters* one by one; a trailing : means that an arg. is required.
+  [[ $opt == '?' ]] && exit 129 # invalid option or missing option argument - getopts has already printed an error to stderr for us, we just exit.
+  declare $opt="${OPTARG-1}" # !! strangely, due to using a variable reference on the LHS, the double quotes ARE needed for values with spaces on the RHS.
+done
+# Option values (1 for flag options, option arguments otherwise) are now
+# stored in variables named for the option letters; e.g., if -q was specified,
+# $q now contains 1.
+quietStdout=${q:-0}
+quietAll=${Q:-0}
+isCmdStr=${c:-0}
+fromStdin=${s:-0}
+interactive=${i:-0}
+shellList=${l:-$SHELLS}
+
+# Determine the options to pass through to the shells invoked.
+passThruOpts=()
+(( isCmdStr )) && passThruOpts+=( '-c' )
+(( fromStdin )) && passThruOpts+=( '-s' )
+passThruOpts+=( '--' )
+
+shift $((OPTIND - 1)) # Skip the already-processed arguments (options).
+
+
+# Interactive mode (-i):
+  # Cannot be combined with -c or -s or -q or -Q
+(( interactive && ( isCmdStr || fromStdin || quietAll || quietStdout ) )) && dieSyntax "Incompatible options specified."
+  # Doesn't support arguments.
+(( interactive && $# )) && dieSyntax "Unexpected argument(s) specified: '$*'."
+
+# For consistency we also prevent specifying *both* -c and -s, as most shells do not support input via both stdin and command string.
+# (dash is the only exception).
+(( isCmdStr && fromStdin )) && dieSyntax "Incompatible options specified: Please specify EITHER a command string OR stdin input."
+
+# As a courtesy, we prevent -c without also specifying operands, because we know it would fail later.
+# Note that, otherwise, any number of operands, whether combined with stdin input or not, are legal.
+# Not all shells, however, process *both* a -c command *and* stdin input; bash, for instance, quietly ignores stdin input in that event.
+(( isCmdStr && $# == 0 )) && die "-c requires specifying a command string."
+
+
+# See if input is to come from stdin *implicitly*.
+if (( ! (interactive  || fromStdin) )); then
+  (( $# == 0 )) && fromStdin=1
+fi
+
+# Note that we ALSO allow stdin input from the terminal with -s (or if no operands are specified), not just with -i: 
+# In contrast with -i (REPL-style, line-by-line), -s allows multiple lines to be entered, until ⌃D is pressed to submit all lines at once.
+# This is like typing a whole script interactively.
+# With -i, only stdin input from the *terminal* makes sense.
+(( interactive )) && [[ ! -t 0 ]] && die "-i requires that stdin input be provided interactively."
+
+# If stdout wasn't connected to a terminal on entering this script, we suppress colored output.
+# Note that sending from a terminal through a *pipe* is still considered being connected to a terminal.
+[[ -t 1  ]] || kNO_COLOR=1
+
+# Determine what shells to invoke.
+if [[ -n $shellList ]]; then # shells were explicitly specified, either with -l or via env. variable $SHELL
+
+  shellsGiven=1
+  shellCandiates=( ${shellList//,/ } )
+
+else  # use default shells
+
+  shellsGiven=0
+  shellCandiates=( ${kDEFAULT_SHELLS[@]} )
+
+fi
+
+# Abort in case of non-existent shells, if explicitly specified); otherwise, weed them out.
+# Note: With the default shells, if 'sh' is found to be a mere symlink to 'dash', it is skipped.
+#       A mere symlink to 'bash' is NOT skipped, however, because bash behaves slightly differently when invoked as 'sh'.
+# Also: determine shells' display names.
+shells=() shellDisplayNames=() skipDash=0
+for shell in "${shellCandiates[@]}"; do
+  (( skipDash )) && [[ $shell == 'dash' ]] && continue
+  shellDisplayName=$shell
+    # Determine full shell path; if the shell cannot be located:
+    #  - if the list of shells was explicitly defined: report an error and exit
+    #  - otherwise, simply skip that shell
+  shellFullPath=$(which "$shell" 2>/dev/null) || { (( shellsGiven )) && die "Shell not found: $shell"; } && {
+      if [[ $shell == 'sh' ]]; then          
+        trueShell=$(basename "$(rreadlink "$shellFullPath")")
+        if [[ "$trueShell" != "$shell" ]]; then # 'sh' is symlinked to a different executable
+          shellDisplayName+="@ (-> $trueShell)"
+          # !! If 'sh' symlinks to 'dash', we assume - given that dash has no other purpose than to be POSIX sh-compliant - that dash behaves the same as 'sh',
+          # !! irrespective of how it is invoked, so there's no point in *also* running 'dash' - hence we skip it.
+          [[ "$trueShell" == 'dash' ]] && skipDash=1
+        elif [[ $(uname) == 'Darwin' ]]; then
+          # !! On OSX, sh is a *variant* of bash: a *separate executable* that implements *additional* behaviors beyond invoking bash via a *symlink* named `sh` that points to `bash`.
+          shellDisplayName+=' (bash variant)'
+        fi
+      fi
+  }
+  shells+=( "$shell" )
+  shellDisplayNames+=( "$shellDisplayName" )
+done
+
+
+# Initialize temp files.
+tmpFiles=()
+tmpFileOutput=$(mktemp -t "$THIS_NAME-XXX") # Works on both OSX and Linux; note: file will have random extension on OSX (e.g., '/var/folders/19/0lxcl7hd63d6fqd813glqppc0000gn/T/XXX.XJViLcM3') and none on Linux (e.g., '/tmp/vXD')
+tmpFiles+=( "$tmpFileOutput" )
+tmpFileTiming=$(mktemp -t "$THIS_NAME-XXX")
+tmpFiles+=( "$tmpFileTiming" )
+if (( fromStdin )); then
+  # Note: We MUST capture the original stdin in a temp. file rather, because we need to provide the same input *multiple* times.
+  #       If we relied on the invoked shells to access the original stdin, the *first* shell would *consume* all input.
+  tmpFileStdIn=$(mktemp -t "$THIS_NAME-XXX") # Works on both OSX and Linux; note: file will have random extension on OSX (e.g., '/var/folders/19/0lxcl7hd63d6fqd813glqppc0000gn/T/XXX.XJViLcM3') and none on Linux (e.g., '/tmp/vXD')
+  tmpFiles+=( "$tmpFileStdIn" )
+  cat >"$tmpFileStdIn"
+fi
+trap '(( interactive )) && history -w "$kREPL_HISTFILE"; rm "${tmpFiles[@]}"' EXIT # Set up exit trap to automatically clean up all temp files, and, if in interactive mode, to persist the history.
+
+# Interactive mode: configure the history function and read the history file.
+(( interactive )) && { HISTCONTROL='ignoredups'; HISTSIZE=100; HISTFILESIZE=$HISTSIZE; history -r "$kREPL_HISTFILE"; }
+
+while :; do # loop is for -i only
+
+  if (( interactive )); then
+    echo "$(blue 'Enter a command') to execute in $(blue "$(sed 's/ /, /g' <<<"${shells[@]}")") ('exit' to exit):" >/dev/tty
+    # Note: read -e turns on readline support for the usual editing and navigation keys, as well as any custom config in ~/.inputrc.
+    #       !! Sadly, custom programmable completions are ignored by read -e; the only thing you get is filename completion - see http://stackoverflow.com/q/4726695/45375
+    #       !! Working around that would (a) require bash 4+ and (b) be nontrivial.
+    read -r -e -p '> ' # Ask user for single command.
+    [[ $REPLY == 'exit' ]] && exit 0
+    [[ $REPLY == 'clear' ]] && { clear; continue; }
+    [[ -z $REPLY ]] && continue
+    history -s "$REPLY" # Add command to history.
+    passThruOpts=()
+    set -- -c -- "$REPLY"  # Set the parameters for use in the shell invocations below.
+  fi
+
+  # Invocation loop over all shells
+  i=0
+  ecOverall=0
+  shellsOk=()
+  shellsFailed=()
+  for shell in "${shells[@]}"; do
+
+    # Make stdin come from the temp. file in which we captured the original stdin.
+    (( fromStdin )) && exec < "$tmpFileStdIn"
+
+    # Invoke, capture output and timing information, and save exit code.
+    { 
+      (( quietStdout )) && time -p "$shell" "${passThruOpts[@]}" "$@" 1>/dev/null 2>"$tmpFileOutput" ||
+                           time -p "$shell" "${passThruOpts[@]}" "$@" &>"$tmpFileOutput"
+    } 2>"$tmpFileTiming"
+    ec=$?
+
+    if (( ec )); then
+      (( ++ecOverall ))  # We report as the exit code the number of invocations that failed.
+      shellsFailed+=( "$shell" )
+    else
+      shellsOk+=( "$shell" )
+    fi
+
+    # Print header: success/failure, shell name, timing
+    printf '%s %-50s [%s]\n' "$(statusMark $ec)" "$(underlineBlue "${shellDisplayNames[i]}")" "$(colorCodeOutput $ec "$(head -n 1 "$tmpFileTiming" | cut -d' ' -f2)s")" # | column 
+
+    # Print captured output, if requested.
+    if (( ! quietAll )); then
+      if [[ -s "$tmpFileOutput" ]]; then # Was any output captured?
+        # Print output, potentially color-coded:
+        #  - If the command succeeded, print all output *normally*.
+        #  - If it failed, print all output red.
+        #    Note: If stderr wasn't suppressed, this, unfortunately, is an all-or-nothing proposition, since we only have *combined* output without being able to tell which lines came from stdout vs. stderr.
+        cat "$tmpFileOutput" | sed 's/^/  /' | colorIfFailed $ec
+      fi
+      # Unless output was suppressed, print an empty lines between shells - even if nothing happened to be captured in this specific case. The idea is to facilitate paragraph-based parsing.
+      (( quietStdout )) || printf '\n'
+    fi
+
+    (( ++i ))
+
+  done
+
+  # Print overall result.
+  if (( ecOverall )); then # At least 1 shell reported failure.
+    (( ${#shellsFailed[@]} == 1 )) && { pluralSuffix=; conjugationSuffix1=s; } || { pluralSuffix=s; conjugationSuffix1=; }
+    (( ${#shellsOk[@]} > 0 )) && { okSuffix=" ($(green "$(sed 's/ /, /g' <<<"${shellsOk[@]}")"))" && { (( ${#shellsOk[@]} == 1 )) && conjugationSuffix2=s || conjugationSuffix2=;} ; } || okSuffix= conjugationSuffix2=
+    printf '%s - %s shell%s (%s) report%s failure, %s%s report%s success.\n' \
+      "$(red FAILED)" \
+      "$(red ${#shellsFailed[@]} | tr -d '\n')" \
+      "$pluralSuffix" \
+      "$(sed 's/ /, /g' <<<"${shellsFailed[@]}" | red | tr -d '\n')" \
+      "$conjugationSuffix1" \
+      $((( ${#shellsOk[@]} )) && printf $(green ${#shellsOk[@]}) || printf ${#shellsOk[@]}) \
+      "$okSuffix" \
+      "$conjugationSuffix2"
+  else # All shells reported success.
+    if  (( ${#shellsOk[@]} == 1 )); then
+      printf '%s - Shell %s reports success.\n' "$(green OK)" "$(sed 's/ /, /g' <<<"${shells[@]}")"
+    else
+      printf '%s - All %s shells (%s) report success.\n' "$(green OK)" "$(green ${#shells[@]})" "$(green "$(sed 's/ /, /g' <<<"${shells[@]}")")"
+    fi
+  fi
+
+  (( interactive )) || break
+
+done
+
+exit $ecOverall
