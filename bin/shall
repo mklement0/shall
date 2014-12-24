@@ -185,13 +185,13 @@ NOTES
   it is 0 if all shells ran the command successfully.
 
 EXAMPLES
-    # Echo the name of executing shell.
+    # Echo the name of each executing shell.
   $THIS_NAME -c 'echo "Hello from \$0."'
     # Also echo the 1st argument passed.                
   echo 'echo "Passed to \$0: \$1"' | $THIS_NAME -s one
     # Print the type of the 'which' command in bash and zsh.
   $THIS_NAME -l bash,zsh -c 'type which'
-    # Enter a REPL that evaulates commands in both bash and dash.
+    # Enter a REPL that evaluates commands in both bash and dash.
   SHELLS=bash,dash $THIS_NAME -i
   
 EOF

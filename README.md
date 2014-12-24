@@ -1,11 +1,13 @@
 # shall
 
-A CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.
+A CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing on Unix-like systems.
 
 **`shall`** (for *sh*ell with *all* (POSIX-like) shells) offers a convenient way of running a given shell script or shell command
 with a default set or specifiable set of POSIX-like shells, so as to facilitate testing of portable (POSIX-compliant, cross-shell) shell code.
 
-Additionally, you can use `shall`:
+By default, the following shells are targeted, if installed: **sh, dash, bash, zsh, ksh**
+
+Additionally, you can use `shall`: 
 
 * as a REPL, with `-i`.
 * in a script's shebang line.
@@ -15,6 +17,24 @@ Each shell's processing time is automatically measured to allow performance comp
 The syntax is modeled on that of the underlying shells. 
 
 See the Usage chapter for details.
+
+## Quick Examples
+
+```sh
+
+  # Echo the name of executing shell.
+shall -c 'echo "Hello from $0."'
+
+  # Also echo the 1st argument passed.                
+echo 'echo "Passed to $0: $1"' | shall -s one
+
+  # Print the type of the 'which' command in bash and zsh.
+shall -l bash,zsh -c 'type which'
+
+  # Enter a REPL that evaulates commands in both bash and dash.
+SHELLS=bash,dash shall -i
+
+```
 
 ## Installation
 
