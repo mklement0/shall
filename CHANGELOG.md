@@ -7,5 +7,5 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 * **v0.1.1** (2014-12-23):
     * read-me and CLI help fixes
 
-* **v0.1.0** (2014-12-23):
+* **v0.1.1** (2014-12-23):
 	* initial release
