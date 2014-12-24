@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Contents**
 
-- [shall - a CLI and REPL for invoking a shell script or command with multiple POSIX-like shells for portability testing](#shall---a-cli-and-repl-for-invoking-a-shell-script-or-command-with-multiple-posix-like-shells-for-portability-testing)
+- [shall](#shall)
   - [Installation](#installation)
   - [Usage](#usage)
   - [License](#license)
@@ -12,14 +12,16 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# shall - a CLI and REPL for invoking a shell script or command with multiple POSIX-like shells for portability testing
+# shall
+
+A CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.
 
 **`shall`** (for *sh*ell with *all* (POSIX-like) shells) offers a convenient way of running a given shell script or shell command
 with a default set or specifiable set of POSIX-like shells, so as to facilitate testing of portable (POSIX-compliant, cross-shell) shell code.
 
 Additionally, you can use `shall`:
 
-* as a REPL with `-i`.
+* as a REPL, with `-i`.
 * in a script's shebang line.
  
 Each shell's processing time is automatically measured to allow performance comparisons.
@@ -82,7 +84,7 @@ NOTES
   
   Timing information is reported for each shell.
   
-  In interactive mode (i), history is maintained in file /Users/mklement/.shall_history
+  In interactive mode (i), history is maintained in file ~/.shall_history
   
   To get the name of the running shell from within your code in any of the
   invocation scenarios, use:

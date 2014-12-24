@@ -113,6 +113,7 @@ _update-readme-usage:
 	 CLI_HELP_CMD_DISPLAY=( "$${CLI_HELP_CMD[@]}" ); CLI_HELP_CMD_DISPLAY[0]="$$cliName"; \
 	 newText=$$'\n```\n$$ '"$${CLI_HELP_CMD_DISPLAY[@]}"$$'\n\n'"$$( "$${CLI_HELP_CMD[@]}" )"$$'\n```\n' || { echo "Failed to update read-me chapter: usage: invoking CLI help failed: $${CLI_HELP_CMD[@]}" >&2; exit 1; }; \
 	 newText="$${newText//\$$/$$\$$}"; \
+	 newText="$${newText//~/\~}"; \
 	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_USAGE)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->[ \t]*\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: usage." >&2; exit 1; }
 
 #  - Replaces the '## License' chapter with the contents of LICENSE.md
