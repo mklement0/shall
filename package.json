@@ -2,7 +2,7 @@
   "name": "shall",
   "description": "A CLI for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "os": [
     "!win32"
   ],
@@ -22,13 +22,13 @@
     "test": "make test"
   },
   "keywords": [
-      "shell"
-    , "cross-shell"
-    , "test"
-    , "compatibility"
-    , "POSIX"
-    , "portable"
-    , "REPL"
+    "shell",
+    "cross-shell",
+    "test",
+    "compatibility",
+    "POSIX",
+    "portable",
+    "REPL"
   ],
   "author": "Michael Klement <mklement0@gmail.com> (http://same2u.net)",
   "license": "MIT",
