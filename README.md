@@ -103,13 +103,13 @@ NOTES
   it is 0 if all shells ran the command successfully.
 
 EXAMPLES
-    # Echo the name of executing shell.
+    # Echo the name of each executing shell.
   shall -c 'echo "Hello from $0."'
     # Also echo the 1st argument passed.                
   echo 'echo "Passed to $0: $1"' | shall -s one
     # Print the type of the 'which' command in bash and zsh.
   shall -l bash,zsh -c 'type which'
-    # Enter a REPL that evaulates commands in both bash and dash.
+    # Enter a REPL that evaluates commands in both bash and dash.
   SHELLS=bash,dash shall -i
   
 ```
@@ -145,4 +145,7 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
 * **v0.1.1** (2014-12-23):
+    * read-me and CLI help fixes
+
+* **v0.1.0** (2014-12-23):
 	* initial release
