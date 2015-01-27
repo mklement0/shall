@@ -85,22 +85,29 @@ DESCRIPTION
     Quiet modes: 
      -q suppresses stdout output from the command/script invoked.
      -Q suppresses both stdout and stderr.
+    Note that per-shell and overall success status information is still
+    reported.
 
 NOTES
+  The exit code reflects the number of shells that reported failure; i.e.,
+  it is 0 if all shells ran the command successfully.
+
   Output is selectively colored, but only when outputting to a terminal.
+  Note that only shall's *own* errors are sent to stderr, whereas
+  captured command/script output (interleaved stdout and stderr) is always
+  reported via stdout.
+  When outputting to a terminal and a command/script's invocation fails for a
+  given shell, the (entire) output captured is printed in red.
   
   Timing information is reported for each shell.
   
-  In interactive mode (i), history is maintained in file ~/.shall_history
+  In interactive mode (-i), history is maintained in file ~/.shall_history
   
   To get the name of the running shell from within your code in any of the
   invocation scenarios, use:
     $(ps -o comm= $$)
   When using a command string (-c) or stdin input (-s), you can also
   use $0
-
-  The exit code reflects the number of shells that reported failure; i.e.,
-  it is 0 if all shells ran the command successfully.
 
 EXAMPLES
     # Echo the name of each executing shell.
@@ -118,7 +125,7 @@ EXAMPLES
 
 ## License
 
-Copyright (c) 2015 Michael Klement, released under the [MIT license](https://spdx.org/licenses/MIT#licenseText).
+Copyright (c) 2014 Michael Klement, released under the [MIT license](https://spdx.org/licenses/MIT#licenseText).
 
 ### Acknowledgements
 
@@ -143,8 +150,13 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
-* **v0.1.2** (2014-12-23):
-  * read-me and CLI help fixes
+* **v0.1.2** (2015-01-27):
+  * fix: -q option no longer masks failures
+  * doc: CLI help and read-me updates
+  * tests: Urchin-based tests added
+
+* **v0.1.1** (2014-12-23):
+  * doc: read-me and CLI help fixes
 
 * **v0.1.0** (2014-12-23):
   * initial release
