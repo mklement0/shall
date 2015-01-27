@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+trap 'rm -f tmpfile' EXIT
+
+echo 'echo foo; echo bar >&2' | shall -l sh -Q >tmpfile || exit
+fgrep -q 'foo' tmpfile && exit 1
+fgrep -q 'bar' tmpfile && exit 1
+exit 0

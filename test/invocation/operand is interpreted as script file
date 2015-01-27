@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+trap 'rm -f tmpfileIn tmpfileOut' EXIT # Set up exit trap to automatically clean up the temp file.
+
+# operand only
+echo 'echo foo' >tmpfileIn
+shall tmpfileIn >/dev/null || exit
+
+# operand + arguments
+echo 'echo foo: $*' >tmpfileIn
+shall tmpfileIn bar baz >tmpfileOut || exit
+fgrep -q 'foo: bar baz' tmpfileOut || exit

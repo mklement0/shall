@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+trap 'rm -f tmpfile' EXIT
+
+# The following commands *should* fail (cause shall to report a nonzero exit code) -- the presence of -q and -Q should not change that.
+echo '<' | shall -l sh -q >/dev/null && exit 1
+echo '<' | shall -l sh -Q >/dev/null && exit 1
+exit 0

@@ -118,7 +118,7 @@ EXAMPLES
 
 ## License
 
-Copyright (c) 2014 Michael Klement, released under the [MIT license](https://spdx.org/licenses/MIT#licenseText).
+Copyright (c) 2015 Michael Klement, released under the [MIT license](https://spdx.org/licenses/MIT#licenseText).
 
 ### Acknowledgements
 
@@ -130,7 +130,6 @@ This project gratefully depends on the following open-source components, accordi
 
 ### npm Dependencies
 
-* [doctoc (D)](https://github.com/thlorenz/doctoc)
 * [json (D)](https://github.com/trentm/json)
 * [replace (D)](https://github.com/harthur/replace)
 * [semver (D)](https://github.com/isaacs/node-semver)
@@ -144,8 +143,8 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
-* **v0.1.1** (2014-12-23):
-    * read-me and CLI help fixes
+* **v0.1.2** (2014-12-23):
+  * read-me and CLI help fixes
 
 * **v0.1.0** (2014-12-23):
-	* initial release
+  * initial release

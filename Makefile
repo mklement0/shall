@@ -24,10 +24,10 @@ list:
 	@$(MAKE) -pRrn -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | sort
 
 .PHONY: test
-# To skip tests in the context of target 'release', for instance, invoke with NOTESTS=1; e.g.: make release NOTESTS=1
+# To optionally skip tests in the context of target 'release', for instance, invoke with NOTEST=1; e.g.: make release NOTEST=1
 # NOTE: The trailing ; is required to have `make` execute the command as a *shell* command and therefore pick up the PATH additions above.
 test:
-ifeq ($(NOTESTS),1)
+ifeq ($(NOTEST),1)
 	@echo Note: Skipping tests, as requested. >&2
 else
 	@urchin ./test;
@@ -50,15 +50,15 @@ else
 	    newVer=`semver -i "$$newVer" "$$oldVer"` || { echo 'Invalid version-increment specifier: $(VER)' >&2; exit 2; } \
 	  fi; \
 	  printf "=== About to BUMP VERSION:\n\t$$oldVer -> **$$newVer**\n===\nProceed (y/N)?: " && read -re response && [[ "$$response" =~ [yY] ]] || { echo 'Aborted.' >&2; exit 2; };  \
-	  replace --quiet --recursive --exclude='.git,node_modules,test,Makefile' "v$${oldVer//./\\.}" "v$${newVer}" . || exit; \
+	  replace --quiet --recursive --exclude='.git,node_modules,test,Makefile,CHANGELOG.md' "v$${oldVer//./\\.}" "v$${newVer}" . || exit; \
 	  [[ `json -f package.json version` == $$newVer ]] || { npm version $$newVer --no-git-tag-version >/dev/null && printf $$'\e[0;33m%s\e[0m\n' 'package.json' || exit; }; \
-	  fgrep -q "v$$newVer" CHANGELOG.md || { { sed -n '1,/^<!--/p' CHANGELOG.md && printf %s $$'\n* **v'"$$newVer"$$'** ('"`date +'%Y-%m-%d'`"$$'):\n\t* ???\n' && sed -n '1,/^<!--/d; p' CHANGELOG.md; } > CHANGELOG.tmp.md && mv CHANGELOG.tmp.md CHANGELOG.md; }; \
+	  fgrep -q "v$$newVer" CHANGELOG.md || { { sed -n '1,/^<!--/p' CHANGELOG.md && printf %s $$'\n* **v'"$$newVer"$$'** ('"`date +'%Y-%m-%d'`"$$'):\n  * ???\n' && sed -n '1,/^<!--/d; p' CHANGELOG.md; } > CHANGELOG.tmp.md && mv CHANGELOG.tmp.md CHANGELOG.md; }; \
 	  git add --update . || exit; \
 	  printf -- "-- Version bumped to v$$newVer in source files and package.json (only just-now updated files were printed above, if any).\n   Describe changes in CHANGELOG.md ('make release' will prompt for it).\n   To update the read-me file, run 'make update-readme' (also happens during 'make release').\n"
 endif	
 
-# make release VER=<newVerSpec> [NOTESTS=1]
-# If VER is defined: Increments the version number, runs tests, then commits and tags, pushes to origin, prompts to publish to the npm-registry.
+# make release VER=<newVerSpec> [NOTEST=1]
+# Increments the version number, runs tests, then commits and tags, pushes to origin, prompts to publish to the npm-registry; NOTEST=1 skips tests.
 .PHONY: release
 release: _need-ver _need-origin _need-npm-credentials _need-master-branch version test
 	@newVer=`json -f package.json version` || exit; \

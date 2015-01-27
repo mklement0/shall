@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+shall -h | fgrep -q 'SYNOPSIS' || exit
+
+shall --help | fgrep -q 'SYNOPSIS' || exit

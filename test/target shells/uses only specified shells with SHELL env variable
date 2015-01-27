@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+trap 'rm -f tmpfile' EXIT # Set up exit trap to automatically clean up the temp file.
+
+shells='sh,bash'
+shellCount=$(awk -F, '{ print NF }' <<<"$shells")
+
+# make sure that ALL SPECIFIED shells are executed
+SHELLS="$shells" shall -c 'echo FOO$0' >tmpfile || exit
+
+fgrep -qw 'FOOsh' tmpfile && fgrep -qw 'FOObash' tmpfile || exit
+
+# also make sure that ONLY THE SPECIFIED shells are executed
+SHELLS="$shells" shall -c '<' >/dev/null  # use deliberately broken command
+(( $? == $shellCount )) || exit # exit code should reflect the number of shells that failed, i.e., all invoked, in this case.

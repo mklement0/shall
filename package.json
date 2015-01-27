@@ -2,7 +2,7 @@
   "name": "shall",
   "description": "A CLI for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "os": [
     "!win32"
   ],
@@ -33,10 +33,9 @@
   "author": "Michael Klement <mklement0@gmail.com> (http://same2u.net)",
   "license": "MIT",
   "devDependencies": {
-    "doctoc": "^0.7.1",
-    "json": "^9.0.2",
+    "json": "^9.0.3",
     "replace": "^0.3.0",
-    "semver": "^4.1.0",
+    "semver": "^4.2.0",
     "urchin": "^0.0.5"
   }
 }

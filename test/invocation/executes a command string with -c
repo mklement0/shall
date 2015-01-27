@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# -c with command string - no further args
+shall -c 'echo foo' | fgrep 'foo' >/dev/null || exit
+(( ${PIPESTATUS[0]} == 0 )) || exit
+
+# -c with command string - plus further args
+shall -c 'echo foo $1' unused bar | fgrep 'foo bar' >/dev/null || exit
+(( ${PIPESTATUS[0]} == 0 )) || exit
