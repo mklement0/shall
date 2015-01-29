@@ -31,7 +31,7 @@ echo 'echo "Passed to $0: $1"' | shall -s one
   # Print the type of the 'which' command in bash and zsh.
 shall -l bash,zsh -c 'type which'
 
-  # Enter a REPL that evaulates commands in both bash and dash.
+  # Enter a REPL that evaluates commands in both bash and dash.
 SHELLS=bash,dash shall -i
 
 ```
@@ -149,6 +149,10 @@ This project gratefully depends on the following open-source components, accordi
 Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
+
+* **v0.1.3** (2015-01-28):
+  * doc: read-me typo corrected
+  * dev: Makefile improvements
 
 * **v0.1.2** (2015-01-27):
   * fix: -q option no longer masks failures

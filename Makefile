@@ -36,7 +36,7 @@ endif
 # If VER is *not* specified: reports the current version number - both as defined by the latest git tag and by package.json
 # If VER *is* specified: sets the version number in source files and package.json; increments from the latest git [version] tag
 .PHONY: version
-version: _need-clean-or-staged-changes-only
+version: _need-clean-ws-or-no-untracked-files
 ifndef VER
 	@printf 'Current version:\n\tv%s (from package.json)\n\t%s (from git tag)\n' `json -f package.json version` `git describe --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || echo 'v0.0.0'`
 	@printf 'Note:\tTo increment the version number or make a release, run:\n\t\tmake version VER=<new-version>\n\t\tmake release VER=<new-version>\n\twhere <new-version> is either an increment specifier (patch, minor, major,\n\tprepatch, preminor, premajor, prerelease), or an explicit <major>.<minor>.<patch> version number.\n'
@@ -62,14 +62,18 @@ endif
 .PHONY: release
 release: _need-ver _need-origin _need-npm-credentials _need-master-branch version test
 	@newVer=`json -f package.json version` || exit; \
+	 echo '-- Opening changelog...'; \
 	 $(EDITOR) CHANGELOG.md; \
 	 { fgrep -q "v$$newVer" CHANGELOG.md && ! fgrep -q '???' CHANGELOG.md; } || { echo "ABORTED: No changelog entries provided for new version v$$newVer." >&2; exit 2; }; \
+	 commitMsg="v$$newVer"$$'\n'"`sed -n '/\*\*'"v$$newVer"'\*\*/,/^\* /p' CHANGELOG.md | sed '1d;$$d'`"; \
 	 $(MAKE) -f $(lastword $(MAKEFILE_LIST)) update-readme || exit; \
-	 [[ -z $$(git status --porcelain || echo no) ]] && echo "-- (Nothing to commit.)" || { git commit -m "v$$newVer" || exit; echo "-- v$$newVer committed."; }; \
-	 git tag -a -m "v$$newVer" "v$$newVer" || exit; \
+	 git add --update . || exit; \
+	 echo '-- Committing...'; \
+	 [[ -z $$(git status --porcelain || echo no) ]] && echo "-- (Nothing to commit.)" || { git commit -m "$$commitMsg" || exit; echo "-- v$$newVer committed."; }; \
+	 git tag -a -m "$$commitMsg" "v$$newVer" || exit; \
 	 echo "-- Tag v$$newVer created."; \
 	 git push -u origin --tags master || exit; \
-	 echo "-- v$$newVer pushed."; \
+	 echo "-- v$$newVer pushed to origin."; \
 	 if [[ `json -f package.json private` != 'true' ]]; then \
 	 		printf "=== About to PUBLISH TO npm REGISTRY as:\n\t**`json -f package.json name`@$$newVer**\n===\nType 'publish' to proceed; anything else to abort: " && read -er response; \
 	 		[[ "$$response" == 'publish' ]] || { echo 'Aborted.' >&2; exit 2; };  \
@@ -161,11 +165,12 @@ _update-readme-changelog:
 _need-master-branch:
 	@[[ `git symbolic-ref --short HEAD` == 'master' ]] || { echo 'Please release from the master branch only.' >&2; exit 2; }
 
-# Ensures that the git workspace is clean or contains only *staged* changes (and no untracked files).
-.PHONY: _need-clean-or-staged-changes-only
-_need-clean-or-staged-changes-only:
+# Ensures that the git workspace is clean or contains no untracked files - any tracked files are implicitly added to the index.
+.PHONY: _need-clean-ws-or-no-untracked-files
+_need-clean-ws-or-no-untracked-files:
 ifdef VER
-	@[[ -z $$(git status --porcelain | awk -F'\0' '$$2 != " " { print $$2 }') ]] || { echo "Workspace must either be clean or contain only staged changes; please commit or at least stage changes first." >&2; exit 2; }
+	@git add --update . || exit
+	@[[ -z $$(git status --porcelain | awk -F'\0' '$$2 != " " { print $$2 }') ]] || { echo "Workspace must either be clean or contain no untracked files; please add untracked files to the index first or delete them." >&2; exit 2; }
 endif
 
 .PHONY: _need-ver

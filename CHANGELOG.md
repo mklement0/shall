@@ -4,6 +4,10 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **v0.1.3** (2015-01-28):
+  * doc: read-me typo corrected
+  * dev: Makefile improvements
+
 * **v0.1.2** (2015-01-27):
   * fix: -q option no longer masks failures
   * doc: CLI help and read-me updates
