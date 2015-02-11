@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PATH="../../bin:$PATH"
+
 trap 'rm -f tmpfile' EXIT
 
 echo 'echo foo; echo bar >&2' | shall -l sh -Q >tmpfile || exit

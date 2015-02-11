@@ -1,0 +1,5 @@
+#!/bin/sh
+
+which bash >/dev/null
+
+

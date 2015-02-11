@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PATH="../../bin:$PATH"
+
 echo 'echo foo' | shall | fgrep 'foo' >/dev/null || exit
 
 (( ${PIPESTATUS[1]} == 0 ))

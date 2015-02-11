@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PATH="../../bin:$PATH"
+
 # -c with command string - no further args
 shall -c 'echo foo' | fgrep 'foo' >/dev/null || exit
 (( ${PIPESTATUS[0]} == 0 )) || exit

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PATH="../../bin:$PATH"
+
 trap 'rm -f tmpfile' EXIT # Set up exit trap to automatically clean up the temp file.
 
 shells='sh,bash'

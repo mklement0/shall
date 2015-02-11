@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PATH="../../bin:$PATH"
+
 shall -h | fgrep -q 'SYNOPSIS' || exit
 
 shall --help | fgrep -q 'SYNOPSIS' || exit

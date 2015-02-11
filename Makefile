@@ -50,7 +50,7 @@ else
 	    newVer=`semver -i "$$newVer" "$$oldVer"` || { echo 'Invalid version-increment specifier: $(VER)' >&2; exit 2; } \
 	  fi; \
 	  printf "=== About to BUMP VERSION:\n\t$$oldVer -> **$$newVer**\n===\nProceed (y/N)?: " && read -re response && [[ "$$response" =~ [yY] ]] || { echo 'Aborted.' >&2; exit 2; };  \
-	  replace --quiet --recursive --exclude='.git,node_modules,test,Makefile,CHANGELOG.md' "v$${oldVer//./\\.}" "v$${newVer}" . || exit; \
+	  replace --quiet --recursive --exclude='.git,node_modules,test,Makefile,CHANGELOG.md,README.md' "v$${oldVer//./\\.}" "v$${newVer}" . || exit; \
 	  [[ `json -f package.json version` == $$newVer ]] || { npm version $$newVer --no-git-tag-version >/dev/null && printf $$'\e[0;33m%s\e[0m\n' 'package.json' || exit; }; \
 	  fgrep -q "v$$newVer" CHANGELOG.md || { { sed -n '1,/^<!--/p' CHANGELOG.md && printf %s $$'\n* **v'"$$newVer"$$'** ('"`date +'%Y-%m-%d'`"$$'):\n  * ???\n' && sed -n '1,/^<!--/d; p' CHANGELOG.md; } > CHANGELOG.tmp.md && mv CHANGELOG.tmp.md CHANGELOG.md; }; \
 	  git add --update . || exit; \
