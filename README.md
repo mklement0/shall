@@ -7,26 +7,31 @@ with a default set or specifiable set of POSIX-like shells, so as to facilitate 
 
 By default, the following shells are targeted, if installed: **sh, dash, bash, zsh, ksh**
 
-Additionally, you can use `shall`: 
+Additionally, you can use `shall`:
 
 * as a REPL, with `-i`.
 * in a script's shebang line.
- 
+
 Each shell's processing time is automatically measured to allow performance comparisons.
 
-The syntax is modeled on that of the underlying shells. 
+The syntax is modeled on that of the underlying shells.
 
 See the Usage chapter for details.
 
 ## Quick Examples
 
+
 ```sh
 
-  # Echo the name of executing shell.
-shall -c 'echo "Hello from $0."'
+  # Echo the name of executing shell; sample output included.
+$ shall -c 'echo "Hello from $0."'
+```
+![Hello example - sample output](doc/images/example-output-hello.png)
 
-  # Also echo the 1st argument passed.                
-echo 'echo "Passed to $0: $1"' | shall -s one
+
+```sh
+  # Execute script 'foo' with argument 'bar' in all shells.
+shall foo bar
 
   # Print the type of the 'which' command in bash and zsh.
 shall -l bash,zsh -c 'type which'
@@ -59,17 +64,17 @@ DESCRIPTION
   Invokes a shell script or command with multiple POSIX-like shells in
   sequence for cross-shell compatibility testing.
 
-  Pass a *script filename* as the first operand, optionally followed by 
+  Pass a *script filename* as the first operand, optionally followed by
   arguments to pass to the script.
   If shall is in your PATH, you can also create executable scripts
   based on it by using the following shebang line:
     #!/usr/bin/env shall
-  
+
   Use -c to specify a *command string* instead; note that the first argument
   after the command string is assigned to $0(!).
-  
+
   Use -s to read from *stdin*; -s is optional, if no arguments are passed.
-  
+
   Use -i to enter *interactive mode*: a simple REPL, where one command
   at a time is read from the terminal and executed.
 
@@ -82,7 +87,7 @@ DESCRIPTION
    - Environment variable 'SHELLS'; e.g.: SHELLS=bash,zsh shall ...
 
   -q, -Q
-    Quiet modes: 
+    Quiet modes:
      -q suppresses stdout output from the command/script invoked.
      -Q suppresses both stdout and stderr.
     Note that per-shell and overall success status information is still
@@ -98,11 +103,11 @@ NOTES
   reported via stdout.
   When outputting to a terminal and a command/script's invocation fails for a
   given shell, the (entire) output captured is printed in red.
-  
+
   Timing information is reported for each shell.
-  
+
   In interactive mode (-i), history is maintained in file ~/.shall_history
-  
+
   To get the name of the running shell from within your code in any of the
   invocation scenarios, use:
     $(ps -o comm= $$)
@@ -112,13 +117,13 @@ NOTES
 EXAMPLES
     # Echo the name of each executing shell.
   shall -c 'echo "Hello from $0."'
-    # Also echo the 1st argument passed.                
+    # Also echo the 1st argument passed.
   echo 'echo "Passed to $0: $1"' | shall -s one
     # Print the type of the 'which' command in bash and zsh.
   shall -l bash,zsh -c 'type which'
     # Enter a REPL that evaluates commands in both bash and dash.
   SHELLS=bash,dash shall -i
-  
+
 ```
 
 <!-- DO NOT EDIT: This chapter is updated by `make update-readme/release`. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
