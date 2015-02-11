@@ -158,6 +158,11 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **v0.1.5** (2015-02-11):
+  * Install: warning added, if bash not found
+  * Dev: bash-presence test improved
+  * Dev: Makefile improvements
+
 * **v0.1.4** (2015-02-11):
   * Dev: testing no longer requires the CLI to be in the path
   * Dev: bash-presence test added

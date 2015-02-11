@@ -2,7 +2,7 @@
   "name": "shall",
   "description": "A CLI for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.",
   "private": false,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "os": [
     "!win32"
   ],
@@ -19,7 +19,8 @@
     "url": "https://github.com/mklement0/shall/issues"
   },
   "scripts": {
-    "test": "make test"
+    "test": "make test",
+    "postinstall": "bash --version >/dev/null 2>&1 || printf '%s\\n\\n' \"WARNING: bash not found; make sure it is installed before running this utility.\" >&2"
   },
   "keywords": [
     "shell",
