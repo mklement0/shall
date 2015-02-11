@@ -206,7 +206,7 @@ EOF
 fi
 
 # Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.1.5"; echo "$THIS_NAME version ${ver#v}"; exit 0; }
+[[ $1 == '--version' ]] && { ver="v0.1.6"; echo "$THIS_NAME version ${ver#v}"; exit 0; }
 
 while getopts l:qQcsi opt; do  # $opt will receive the option *letters* one by one; a trailing : means that an arg. is required.
   [[ $opt == '?' ]] && exit 129 # invalid option or missing option argument - getopts has already printed an error to stderr for us, we just exit.
@@ -286,22 +286,23 @@ for shell in "${shellCandiates[@]}"; do
     # Determine full shell path; if the shell cannot be located:
     #  - if the list of shells was explicitly defined: report an error and exit
     #  - otherwise, simply skip that shell
-  shellFullPath=$(which "$shell" 2>/dev/null) || { (( shellsGiven )) && die "Shell not found: $shell"; } && {
-      if [[ $shell == 'sh' ]]; then          
-        trueShell=$(basename "$(rreadlink "$shellFullPath")")
-        if [[ "$trueShell" != "$shell" ]]; then # 'sh' is symlinked to a different executable
-          shellDisplayName+="@ (-> $trueShell)"
-          # !! If 'sh' symlinks to 'dash', we assume - given that dash has no other purpose than to be POSIX sh-compliant - that dash behaves the same as 'sh',
-          # !! irrespective of how it is invoked, so there's no point in *also* running 'dash' - hence we skip it.
-          [[ "$trueShell" == 'dash' ]] && skipDash=1
-        elif [[ $(uname) == 'Darwin' ]]; then
-          # !! On OSX, sh is a *variant* of bash: a *separate executable* that implements *additional* behaviors beyond invoking bash via a *symlink* named `sh` that points to `bash`.
-          shellDisplayName+=' (bash variant)'
-        fi
+  shellFullPath=$(which "$shell" 2>/dev/null) || { (( shellsGiven )) && die "Shell not found: $shell"; }
+  if [[ -n $shellFullPath ]]; then
+    if [[ $shell == 'sh' ]]; then          
+      trueShell=$(basename "$(rreadlink "$shellFullPath")")
+      if [[ "$trueShell" != "$shell" ]]; then # 'sh' is symlinked to a different executable
+        shellDisplayName+="@ (-> $trueShell)"
+        # !! If 'sh' symlinks to 'dash', we assume - given that dash has no other purpose than to be POSIX sh-compliant - that dash behaves the same as 'sh',
+        # !! irrespective of how it is invoked, so there's no point in *also* running 'dash' - hence we skip it.
+        [[ "$trueShell" == 'dash' ]] && skipDash=1
+      elif [[ $(uname) == 'Darwin' ]]; then
+        # !! On OSX, sh is a *variant* of bash: a *separate executable* that implements *additional* behaviors beyond invoking bash via a *symlink* named `sh` that points to `bash`.
+        shellDisplayName+=' (bash variant)'
       fi
-  }
-  shells+=( "$shell" )
-  shellDisplayNames+=( "$shellDisplayName" )
+    fi  
+    shells+=( "$shell" )
+    shellDisplayNames+=( "$shellDisplayName" )
+  fi
 done
 
 
