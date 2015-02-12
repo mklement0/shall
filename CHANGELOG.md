@@ -4,8 +4,11 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **v0.1.7** (2015-02-11):
+  * Doc: improved description in package.json
+
 * **v0.1.6** (2015-02-11):
-  * Fix: When using default target shells, only those actually installed are targeted.
+  * Fix: When using the default target shells, only those actually installed should be targeted.
 
 * **v0.1.5** (2015-02-11):
   * Install: warning added, if bash not found

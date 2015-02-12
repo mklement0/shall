@@ -206,7 +206,7 @@ EOF
 fi
 
 # Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.1.6"; echo "$THIS_NAME version ${ver#v}"; exit 0; }
+[[ $1 == '--version' ]] && { ver="v0.1.7"; echo "$THIS_NAME version ${ver#v}"; exit 0; }
 
 while getopts l:qQcsi opt; do  # $opt will receive the option *letters* one by one; a trailing : means that an arg. is required.
   [[ $opt == '?' ]] && exit 129 # invalid option or missing option argument - getopts has already printed an error to stderr for us, we just exit.
