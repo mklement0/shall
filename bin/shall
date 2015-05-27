@@ -1,23 +1,21 @@
 #!/usr/bin/env bash
 
-THIS_NAME=$(basename "$BASH_SOURCE")
+kTHIS_NAME=$(basename "$BASH_SOURCE")
+
+unset CDPATH  # to prevent unpredictable `cd` behavior
 
 # Helper function for exiting with error message due to runtime error.
-#   die [errMsg [exitCode]]
-# Default error message states context and indicates that execution is aborted. Default exit code is 1.
-# Prefix for context is always prepended.
-# Note: An error message is *always* printed; if you just want to exit with a specific code silently, use `exit n` directly.
+#   die [errMsg]
 die() {
-  echo "$THIS_NAME: ERROR: ${1:-"ABORTING due to unexpected error."}" 1>&2
-  exit ${2:-128} # Note: If the argument is non-numeric, the shell prints a warning and uses exit code 255.
+  echo "$kTHIS_NAME: ERROR: ${1:-"ABORTING due to unexpected error."}" 1>&2
+  exit 127  # Note: exit code was chosen to (a) not overlap with exit codes produced during normal operation, while (b) not overlapping with exit codes stemming from termination by signal.
 }
 
 # Helper function for exiting with error message due to invalid parameters.
 #   dieSyntax [errMsg]
-# Default error message is provided, as is prefix and suffix; exit code is always 2.
 dieSyntax() {
-  echo "$THIS_NAME: PARAMETER ERROR: ${1:-"Invalid parameter(s) specified."} Use -h for help." 1>&2
-  exit 129
+  echo "$kTHIS_NAME: ARGUMENT ERROR: ${1:-"Invalid argument(s) specified."} Use -h for help." 1>&2
+  exit 126  # Note: exit code was chosen to (a) not overlap with exit codes produced during normal operation, while (b) not overlapping with exit codes stemming from termination by signal.
 }
 
 # SYNOPSIS
@@ -124,7 +122,7 @@ rreadlink() ( # execute function in a *subshell* to localize the effect of `cd`.
 # The shells to target by default, if installed.
 kDEFAULT_SHELLS=( sh dash bash zsh ksh )
 
-kREPL_HISTFILE=~/".${THIS_NAME}_history"
+kREPL_HISTFILE=~/".${kTHIS_NAME}_history"
 
 # ----------
 
@@ -132,10 +130,10 @@ kREPL_HISTFILE=~/".${THIS_NAME}_history"
 if [[ $1 == '--help' || $1 == '-h' ]]; then
   cat <<EOF
 SYNOPSIS
-  $THIS_NAME [-l shellA,...] [-q|-Q] script [arg ...]
-  $THIS_NAME [-l shellA,...] [-q|-Q] -c command_string [arg0 arg ...]
-  $THIS_NAME [-l shellA,...] [-q|-Q] [-s arg ...]
-  $THIS_NAME [-l shellA,...]  -i
+  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] script      [arg ...]
+  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] -c command  [arg0 arg ...]
+  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] [-s          arg ...]
+  $kTHIS_NAME [-w shellA,...]  -i
 
 DESCRIPTION
   Invokes a shell script or command with multiple POSIX-like shells in
@@ -143,9 +141,9 @@ DESCRIPTION
 
   Pass a *script filename* as the first operand, optionally followed by 
   arguments to pass to the script.
-  If $THIS_NAME is in your PATH, you can also create executable scripts
+  If $kTHIS_NAME is in your PATH, you can also create executable scripts
   based on it by using the following shebang line:
-    #!/usr/bin/env $THIS_NAME
+    #!/usr/bin/env $kTHIS_NAME
   
   Use -c to specify a *command string* instead; note that the first argument
   after the command string is assigned to \$0(!).
@@ -160,8 +158,8 @@ DESCRIPTION
 
   To specify shells explicitly, use either of the following (in order of
   precedence):
-   - Option -l shellA,...; e.g., $THIS_NAME -l bash,zsh ...
-   - Environment variable 'SHELLS'; e.g.: SHELLS=bash,zsh $THIS_NAME ...
+   - Option -w shellA,...; e.g., $kTHIS_NAME -w bash,zsh ...
+   - Environment variable 'SHELLS'; e.g.: SHELLS=bash,zsh $kTHIS_NAME ...
 
   -q, -Q
     Quiet modes: 
@@ -170,12 +168,19 @@ DESCRIPTION
     Note that per-shell and overall success status information is still
     reported.
 
+  -p 
+    Allows you to pass options through to the shells invoked, as a single
+    argument; e.g., -p '-e -o noglob'
+    Make sure all shells targeted support the specified options; all
+    POSIX-like should support the same options as the \`set\` builtin
+    (see http://is.gd/MJPvPr).
+
 NOTES
   The exit code reflects the number of shells that reported failure; i.e.,
   it is 0 if all shells ran the command successfully.
 
   Output is selectively colored, but only when outputting to a terminal.
-  Note that only $THIS_NAME's *own* errors are sent to stderr, whereas
+  Note that only $kTHIS_NAME's *own* errors are sent to stderr, whereas
   captured command/script output (interleaved stdout and stderr) is always
   reported via stdout.
   When outputting to a terminal and a command/script's invocation fails for a
@@ -183,7 +188,7 @@ NOTES
   
   Timing information is reported for each shell.
   
-  In interactive mode (-i), history is maintained in file ${kREPL_HISTFILE/#$HOME/\~}
+  In interactive mode (-i), history is maintained in file ${kREPL_HISTFILE/#$HOME/\$HOME}
   
   To get the name of the running shell from within your code in any of the
   invocation scenarios, use:
@@ -193,43 +198,73 @@ NOTES
 
 EXAMPLES
     # Echo the name of each executing shell.
-  $THIS_NAME -c 'echo "Hello from \$0."'
+  $kTHIS_NAME -c 'echo "Hello from \$0."'
     # Also echo the 1st argument passed.                
-  echo 'echo "Passed to \$0: \$1"' | $THIS_NAME -s one
+  echo 'echo "Passed to \$0: \$1"' | $kTHIS_NAME -s one
+    # Execute a script, passing the -e shell option (abort on errror).
+  $kTHIS_NAME -p '-e' someScript
     # Print the type of the 'which' command in bash and zsh.
-  $THIS_NAME -l bash,zsh -c 'type which'
+  $kTHIS_NAME -w bash,zsh -c 'type which'
     # Enter a REPL that evaluates commands in both bash and dash.
-  SHELLS=bash,dash $THIS_NAME -i
+  SHELLS=bash,dash $kTHIS_NAME -i
   
 EOF
     exit 0
 fi
 
 # Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.1.7"; echo "$THIS_NAME version ${ver#v}"; exit 0; }
+[[ $1 == '--version' ]] && { ver="v0.2.0"; echo "$kTHIS_NAME version ${ver#v}"; exit 0; }
 
-while getopts l:qQcsi opt; do  # $opt will receive the option *letters* one by one; a trailing : means that an arg. is required.
-  [[ $opt == '?' ]] && exit 129 # invalid option or missing option argument - getopts has already printed an error to stderr for us, we just exit.
-  declare $opt="${OPTARG-1}" # !! strangely, due to using a variable reference on the LHS, the double quotes ARE needed for values with spaces on the RHS.
+# Parse options
+shellList=$SHELLS isCmdStr=0 cmdStr= fromStdin=0 interactive=0 quietStdout=0 quietAll=0 extraPassThruOpts=
+while getopts :w:l:p:qQc:si opt; do  # $opt will receive the option *letters* one by one; a trailing : means that an arg. is required.
+  [[ $opt == '?' ]] && dieSyntax "ARGUMENT ERROR: Unknown option: -$OPTARG. To pass options through to the target shells, pass them via -p."
+  [[ $opt == ':' ]] && dieSyntax "Option -$OPTARG is missing its argument."
+  case $opt in
+    w|l)  # !! -l is for backward compatibility - switched to -w to avoid confusion with native shell option -l (run as login shell)
+      shellList=$OPTARG
+      ;;
+    q)
+      quietStdout=1
+      ;;
+    Q)
+      quietAll=1
+      ;;
+    c) # note that, curiously, all shells require the argument to -c be specified as a SEPARATE argument, violating the POSIX requirement that mandatory option-arguments *also* be accepted as directly-attached values.
+       # possible rationale: additional non-option arguments can follow, representing the positional parameters that the command string will see
+      isCmdStr=1
+      cmdStr=$OPTARG
+      ;;
+    i)
+      interactive=1
+      ;;
+    s)
+      fromStdin=1
+      ;;
+    p)
+      extraPassThruOpts=$OPTARG
+      ;;
+    *)
+      dieSyntax "DESIGN ERROR: Unhandled option: $opt"
+      ;;
+  esac
 done
-# Option values (1 for flag options, option arguments otherwise) are now
-# stored in variables named for the option letters; e.g., if -q was specified,
-# $q now contains 1.
-quietStdout=${q:-0}
-quietAll=${Q:-0}
-isCmdStr=${c:-0}
-fromStdin=${s:-0}
-interactive=${i:-0}
-shellList=${l:-$SHELLS}
 
 # Determine the options to pass through to the shells invoked.
 passThruOpts=()
-(( isCmdStr )) && passThruOpts+=( '-c' )
+if [[ -n $extraPassThruOpts ]]; then
+  pv extraPassThruOpts
+  # If options to pass through were explicitly specified, parse them into an array now.
+  IFS=$'\n' read -d ' ' -ra passThruOpts < <(printf %s "$extraPassThruOpts" | xargs -n 1)
+fi
+# The -c and -s options are special: 
+#   -c: its argument is the command to execute and must be specified *separately* from -c
+#   both -c and -s: any subsequent arguments - even if they look like options! - become the positional arguments for the code invoked
 (( fromStdin )) && passThruOpts+=( '-s' )
-passThruOpts+=( '--' )
+(( isCmdStr )) && passThruOpts+=( '-c' "$cmdStr" )
 
-shift $((OPTIND - 1)) # Skip the already-processed arguments (options).
-
+# Skip past the options.
+shift $((OPTIND - 1)) 
 
 # Interactive mode (-i):
   # Cannot be combined with -c or -s or -q or -Q
@@ -241,37 +276,34 @@ shift $((OPTIND - 1)) # Skip the already-processed arguments (options).
 # (dash is the only exception).
 (( isCmdStr && fromStdin )) && dieSyntax "Incompatible options specified: Please specify EITHER a command string OR stdin input."
 
-# As a courtesy, we prevent -c without also specifying operands, because we know it would fail later.
-# Note that, otherwise, any number of operands, whether combined with stdin input or not, are legal.
-# Not all shells, however, process *both* a -c command *and* stdin input; bash, for instance, quietly ignores stdin input in that event.
-(( isCmdStr && $# == 0 )) && die "-c requires specifying a command string."
-
-
 # See if input is to come from stdin *implicitly*.
-if (( ! (interactive  || fromStdin) )); then
+if (( ! (interactive  || fromStdin || isCmdStr) )); then
   (( $# == 0 )) && fromStdin=1
 fi
 
-# Note that we ALSO allow stdin input from the terminal with -s (or if no operands are specified), not just with -i: 
-# In contrast with -i (REPL-style, line-by-line), -s allows multiple lines to be entered, until ⌃D is pressed to submit all lines at once.
+# ?? Activate for debugging:
+# pv shellList isCmdStr fromStdin interactive quietStdout quietAll extraPassThruOpts passThruOpts
+
+# Note that we ALSO allow stdin input from the terminal with -s (or implicitly, if no operands are specified), not just with -i: 
+# -s, in contrast with -i (REPL-style, line-by-line), allows *multiple* lines to be entered, until ⌃D is pressed to submit all lines at once.
 # This is like typing a whole script interactively.
 # With -i, only stdin input from the *terminal* makes sense.
 (( interactive )) && [[ ! -t 0 ]] && die "-i requires that stdin input be provided interactively."
 
 # If stdout wasn't connected to a terminal on entering this script, we suppress colored output.
-# Note that sending from a terminal through a *pipe* is still considered being connected to a terminal.
-[[ -t 1  ]] || kNO_COLOR=1
+# Note that sending from a terminal through a *pipe* is NOT considered being connected to a terminal.
+[[ -t 1 ]] || kNO_COLOR=1
 
 # Determine what shells to invoke.
-if [[ -n $shellList ]]; then # shells were explicitly specified, either with -l or via env. variable $SHELL
+if [[ -n $shellList ]]; then # shells were explicitly specified, either with -w or via env. variable $SHELL
 
   shellsGiven=1
-  shellCandiates=( ${shellList//,/ } )
+  shellCandidates=( ${shellList//,/ } )
 
 else  # use default shells
 
   shellsGiven=0
-  shellCandiates=( ${kDEFAULT_SHELLS[@]} )
+  shellCandidates=( ${kDEFAULT_SHELLS[@]} )
 
 fi
 
@@ -280,7 +312,7 @@ fi
 #       A mere symlink to 'bash' is NOT skipped, however, because bash behaves slightly differently when invoked as 'sh'.
 # Also: determine shells' display names.
 shells=() shellDisplayNames=() skipDash=0
-for shell in "${shellCandiates[@]}"; do
+for shell in "${shellCandidates[@]}"; do
   (( skipDash )) && [[ $shell == 'dash' ]] && continue
   shellDisplayName=$shell
     # Determine full shell path; if the shell cannot be located:
@@ -308,14 +340,14 @@ done
 
 # Initialize temp files.
 tmpFiles=()
-tmpFileOutput=$(mktemp -t "$THIS_NAME-XXX") # Works on both OSX and Linux; note: file will have random extension on OSX (e.g., '/var/folders/19/0lxcl7hd63d6fqd813glqppc0000gn/T/XXX.XJViLcM3') and none on Linux (e.g., '/tmp/vXD')
+tmpFileOutput=$(mktemp -t "$kTHIS_NAME-XXXX") # Works on both OSX and Linux; note: file will have random extension on OSX (e.g., '/var/folders/19/0lxcl7hd63d6fqd813glqppc0000gn/T/XXX.XJViLcM3') and none on Linux (e.g., '/tmp/vXD')
 tmpFiles+=( "$tmpFileOutput" )
-tmpFileTiming=$(mktemp -t "$THIS_NAME-XXX")
+tmpFileTiming=$(mktemp -t "$kTHIS_NAME-XXXX")
 tmpFiles+=( "$tmpFileTiming" )
 if (( fromStdin )); then
   # Note: We MUST capture the original stdin in a temp. file rather, because we need to provide the same input *multiple* times.
   #       If we relied on the invoked shells to access the original stdin, the *first* shell would *consume* all input.
-  tmpFileStdIn=$(mktemp -t "$THIS_NAME-XXX") # Works on both OSX and Linux; note: file will have random extension on OSX (e.g., '/var/folders/19/0lxcl7hd63d6fqd813glqppc0000gn/T/XXX.XJViLcM3') and none on Linux (e.g., '/tmp/vXD')
+  tmpFileStdIn=$(mktemp -t "$kTHIS_NAME-XXXX")
   tmpFiles+=( "$tmpFileStdIn" )
   cat >"$tmpFileStdIn"
 fi

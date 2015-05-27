@@ -58,10 +58,10 @@ With [node.js](http://nodejs.org/) installed, install via the [npm registry](htt
 $ shall -h
 
 SYNOPSIS
-  shall [-l shellA,...] [-q|-Q] script [arg ...]
-  shall [-l shellA,...] [-q|-Q] -c command_string [arg0 arg ...]
-  shall [-l shellA,...] [-q|-Q] [-s arg ...]
-  shall [-l shellA,...]  -i
+  shall [-w shellA,...] [-q|-Q] [-p opts] script      [arg ...]
+  shall [-w shellA,...] [-q|-Q] [-p opts] -c command  [arg0 arg ...]
+  shall [-w shellA,...] [-q|-Q] [-p opts] [-s          arg ...]
+  shall [-w shellA,...]  -i
 
 DESCRIPTION
   Invokes a shell script or command with multiple POSIX-like shells in
@@ -86,7 +86,7 @@ DESCRIPTION
 
   To specify shells explicitly, use either of the following (in order of
   precedence):
-   - Option -l shellA,...; e.g., shall -l bash,zsh ...
+   - Option -w shellA,...; e.g., shall -w bash,zsh ...
    - Environment variable 'SHELLS'; e.g.: SHELLS=bash,zsh shall ...
 
   -q, -Q
@@ -95,6 +95,13 @@ DESCRIPTION
      -Q suppresses both stdout and stderr.
     Note that per-shell and overall success status information is still
     reported.
+
+  -p 
+    Allows you to pass options through to the shells invoked, as a single
+    argument; e.g., -p '-e -o noglob'
+    Make sure all shells targeted support the specified options; all
+    POSIX-like should support the same options as the `set` builtin
+    (see http://is.gd/MJPvPr).
 
 NOTES
   The exit code reflects the number of shells that reported failure; i.e.,
@@ -109,7 +116,7 @@ NOTES
   
   Timing information is reported for each shell.
   
-  In interactive mode (-i), history is maintained in file \~/.shall_history
+  In interactive mode (-i), history is maintained in file $HOME/.shall_history
   
   To get the name of the running shell from within your code in any of the
   invocation scenarios, use:
@@ -122,8 +129,10 @@ EXAMPLES
   shall -c 'echo "Hello from $0."'
     # Also echo the 1st argument passed.                
   echo 'echo "Passed to $0: $1"' | shall -s one
+    # Execute a script, passing the -e shell option (abort on errror).
+  shall -p '-e' someScript
     # Print the type of the 'which' command in bash and zsh.
-  shall -l bash,zsh -c 'type which'
+  shall -w bash,zsh -c 'type which'
     # Enter a REPL that evaluates commands in both bash and dash.
   SHELLS=bash,dash shall -i
   
@@ -158,34 +167,39 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **v0.2.0** (2015-05-24):
+  * [new] New -p option allows passing additional options through to the shells invoked; e.g.: -p '-e'
+  * [deprecated] -l option for specifying shells to target renamed to -w to avoid confusion with shells' native -l version (login shells); -l will continue to work. 
+  * [robustness] Exit codes relating to shall's *own* failures changed to: 126 (incorrect arguments) and 127 (unexpected failure), chosen so as to avoid clashes with exit codes produced during normal operation and termination by signal.
+
 * **v0.1.7** (2015-02-11):
-  * Doc: improved description in package.json
+  * [doc] improved description in package.json
 
 * **v0.1.6** (2015-02-11):
-  * Fix: When using the default target shells, only those actually installed should be targeted.
+  * [fix] When using the default target shells, only those actually installed should be targeted.
 
 * **v0.1.5** (2015-02-11):
-  * Install: warning added, if bash not found
-  * Dev: bash-presence test improved
-  * Dev: Makefile improvements
+  * [install] warning added, if bash not found
+  * [dev] bash-presence test improved
+  * [dev] Makefile improvements
 
 * **v0.1.4** (2015-02-11):
-  * Dev: testing no longer requires the CLI to be in the path
-  * Dev: bash-presence test added
-  * Dev: Makefile improvements
-  * Doc: read-me improvements (examples)
+  * [dev] testing no longer requires the CLI to be in the path
+  * [dev] bash-presence test added
+  * [dev] Makefile improvements
+  * [doc] read-me improvements (examples)
 
 * **v0.1.3** (2015-01-28):
-  * Doc: read-me typo corrected
-  * Dev: Makefile improvements
+  * [doc] read-me typo corrected
+  * [dev] Makefile improvements
 
 * **v0.1.2** (2015-01-27):
-  * Fix: -q option no longer masks failures
-  * Doc: CLI help and read-me updates
-  * Dev: Urchin-based tests added
+  * [fix] -q option no longer masks failures
+  * [doc] CLI help and read-me updates
+  * [dev] Urchin-based tests added
 
 * **v0.1.1** (2014-12-23):
-  * Doc: read-me and CLI help fixes
+  * [doc] read-me and CLI help fixes
 
 * **v0.1.0** (2014-12-23):
   * Initial release

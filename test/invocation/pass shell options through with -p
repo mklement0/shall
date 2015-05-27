@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+PATH="../../bin:$PATH"
+
+# -p with pass-through option -e with intentionally broken command to ensure that 
+# the failing first command prevents the 2nd one from being executed.
+shall -p '-e' -c 'ls nosuchthing; echo DONOTPRINTME' | fgrep 'DONOTPRINTME' >/dev/null && exit
+(( ${PIPESTATUS[0]} > 0 )) || exit
+
+
+# -p with 2 pass-through options: -e as a dummy, and -o noglob to test disabling of globbing.
+shall -p '-e -o noglob' -c 'echo *' | fgrep '*' >/dev/null || exit
+(( ${PIPESTATUS[0]} == 0 )) || exit

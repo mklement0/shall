@@ -25,23 +25,35 @@ list:
 
 .PHONY: test
 # To optionally skip tests in the context of target 'release', for instance, invoke with NOTEST=1; e.g.: make release NOTEST=1
-# NOTE: The trailing ; is required to have `make` execute the command as a *shell* command and therefore pick up the PATH additions above.
 test:
 ifeq ($(NOTEST),1)
 	@echo Note: Skipping tests, as requested. >&2
 else
-	@urchin ./test;
+	@if [[ -n $$(json -f package.json main) ]]; then tap ./test; else urchin ./test; fi
 endif
+
+# Commits and pushes to the branch of the same name in remote repo 'origin'.
+.PHONY: push
+push: _need-clean-ws-or-no-untracked-files
+	@[[ -z $$(git status --porcelain || echo no) ]] && echo "-- (Nothing to commit.)" || { git commit || exit; echo "-- Committed."; }; \
+	 git push -u origin "$$(git symbolic-ref --short HEAD)" || exit; echo "-- Pushed."
+
 
 # If VER is *not* specified: reports the current version number - both as defined by the latest git tag and by package.json
 # If VER *is* specified: sets the version number in source files and package.json; increments from the latest git [version] tag
 .PHONY: version
-version: _need-clean-ws-or-no-untracked-files
+version:
 ifndef VER
-	@printf 'Current version:\n\tv%s (from package.json)\n\t%s (from git tag)\n' `json -f package.json version` `git describe --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || echo 'v0.0.0'`
-	@printf 'Note:\tTo increment the version number or make a release, run:\n\t\tmake version VER=<new-version>\n\t\tmake release VER=<new-version>\n\twhere <new-version> is either an increment specifier (patch, minor, major,\n\tprepatch, preminor, premajor, prerelease), or an explicit <major>.<minor>.<patch> version number.\n'
+	@if [[ $(MAKECMDGOALS) == 'version' ]]; then \
+	   printf 'Current version:\n\tv%s (from package.json)\n\t%s (from git tag)\n' `json -f package.json version` `git describe --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || echo '(none)'`; \
+	   printf 'Note:\tTo increment the version number or make a release, run:\n\t\tmake version VER=<new-version>\n\t\tmake release [VER=<new-version>]\n\twhere <new-version> is either an increment specifier (patch, minor, major,\n\tprepatch, preminor, premajor, prerelease), or an explicit <major>.<minor>.<patch> version number.\n'; \
+   else \
+   	 printf '===  RELEASING:\n\t(%s ->) v%s \n===\n' `git describe --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || echo '(none)'` `json -f package.json version`; \
+   	 printf 'Proceed (y/N)?: ' && read -re response && [[ "$$response" =~ [yY] ]] || { echo 'Aborted.' >&2; exit 2; }; \
+   fi 
 else
-	 @oldVer=`git tag | xargs semver | tail -n 1 | sed 's/^v//'`; oldVer=$${oldVer:-0.0.0}; \
+	 @$(MAKE) -f $(lastword $(MAKEFILE_LIST)) _need-clean-ws-or-no-untracked-files || exit; \
+	  oldVer=`git tag | xargs semver | tail -n 1 | sed 's/^v//'`; oldVer=$${oldVer:-0.0.0}; \
 	  newVer=`echo "$(VER)" | sed 's/^v//'`; \
 	  if printf "$$newVer" | grep -q '^[0-9]'; then \
 	    semver "$$newVer" >/dev/null || { echo 'Invalid semver version number specified: $(VER)' >&2; exit 2; }; \
@@ -168,15 +180,15 @@ _need-master-branch:
 # Ensures that the git workspace is clean or contains no untracked files - any tracked files are implicitly added to the index.
 .PHONY: _need-clean-ws-or-no-untracked-files
 _need-clean-ws-or-no-untracked-files:
-ifdef VER
 	@git add --update . || exit
 	@[[ -z $$(git status --porcelain | awk -F'\0' '$$2 != " " { print $$2 }') ]] || { echo "Workspace must either be clean or contain no untracked files; please add untracked files to the index first or delete them." >&2; exit 2; }
-endif
 
+# Ensures that the either an explicit new VER (version) number was specified or that is implied by 'package.json' already containing
+# a higher version number than the highest Git version tag.
 .PHONY: _need-ver
 _need-ver:
 ifndef VER
-	@echo "ERROR: Variable 'VER' must be defined. Use 'make version' for more information and to see the current version number." >&2; exit 1
+	@[[ 'v'`json -f package.json version` != `git describe --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null` ]] || { printf 'ERROR: Since the version number in 'package.json' is the same as the latest Git version tag, Variable 'VER' must be defined to set the new version number.\nUse `make version` for more information and to see the current version numbers.\n' >&2; exit 1; }
 endif
 
 # Ensure that a remote git repo named 'origin' is defined.
