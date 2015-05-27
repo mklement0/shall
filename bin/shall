@@ -213,7 +213,7 @@ EOF
 fi
 
 # Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.2.0"; echo "$kTHIS_NAME version ${ver#v}"; exit 0; }
+[[ $1 == '--version' ]] && { ver="v0.2.1"; echo "$kTHIS_NAME version ${ver#v}"; exit 0; }
 
 # Parse options
 shellList=$SHELLS isCmdStr=0 cmdStr= fromStdin=0 interactive=0 quietStdout=0 quietAll=0 extraPassThruOpts=
@@ -253,9 +253,8 @@ done
 # Determine the options to pass through to the shells invoked.
 passThruOpts=()
 if [[ -n $extraPassThruOpts ]]; then
-  pv extraPassThruOpts
   # If options to pass through were explicitly specified, parse them into an array now.
-  IFS=$'\n' read -d ' ' -ra passThruOpts < <(printf %s "$extraPassThruOpts" | xargs -n 1)
+  IFS=$'\n' read -d ' ' -ra passThruOpts < <(printf '%s\n' "$extraPassThruOpts" | xargs -n 1 printf '%s\n')
 fi
 # The -c and -s options are special: 
 #   -c: its argument is the command to execute and must be specified *separately* from -c

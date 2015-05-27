@@ -167,6 +167,10 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **v0.2.1** (2015-05-27):
+  * [fix] Options passed through with -p are no longer ignored on Linux.
+  * [fix] Removed extraneous status output.
+
 * **v0.2.0** (2015-05-24):
   * [new] New -p option allows passing additional options through to the shells invoked; e.g.: -p '-e'
   * [deprecated] -l option for specifying shells to target renamed to -w to avoid confusion with shells' native -l version (login shells); -l will continue to work. 
