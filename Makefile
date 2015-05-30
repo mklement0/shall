@@ -46,7 +46,7 @@ version:
 ifndef VER
 	@if [[ $(MAKECMDGOALS) == 'version' ]]; then \
 	   printf 'Current version:\n\tv%s (from package.json)\n\t%s (from git tag)\n' `json -f package.json version` `git describe --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || echo '(none)'`; \
-	   printf 'Note:\tTo increment the version number or make a release, run:\n\t\tmake version VER=<new-version>\n\t\tmake release [VER=<new-version>]\n\twhere <new-version> is either an increment specifier (patch, minor, major,\n\tprepatch, preminor, premajor, prerelease), or an explicit <major>.<minor>.<patch> version number.\n'; \
+	   printf 'Note:\tTo increment the version number or make a release, run:\n\t\tmake version VER=<new-version>\n\t\tmake release [VER=<new-version>]\n\twhere <new-version> is either an increment specifier (patch, minor, major,\n\tprepatch, preminor, premajor, prerelease), or an explicit <major>.<minor>.<patch> version number.\n\tIf the package.json version number is already ahead of the latest Git version tag,\n\tspecifying VER=<new-version> with `make release` is optional.\n'; \
    else \
    	 printf '===  RELEASING:\n\t(%s ->) v%s \n===\n' `git describe --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null || echo '(none)'` `json -f package.json version`; \
    	 printf 'Proceed (y/N)?: ' && read -re response && [[ "$$response" =~ [yY] ]] || { echo 'Aborted.' >&2; exit 2; }; \
@@ -69,10 +69,11 @@ else
 	  printf -- "-- Version bumped to v$$newVer in source files and package.json (only just-now updated files were printed above, if any).\n   Describe changes in CHANGELOG.md ('make release' will prompt for it).\n   To update the read-me file, run 'make update-readme' (also happens during 'make release').\n"
 endif	
 
-# make release VER=<newVerSpec> [NOTEST=1]
+# make release [VER=<newVerSpec>] [NOTEST=1]
 # Increments the version number, runs tests, then commits and tags, pushes to origin, prompts to publish to the npm-registry; NOTEST=1 skips tests.
+# VER=<newVerSpec> is mandatory, unless the version number in package.json is ahead of the latest Git version tag.
 .PHONY: release
-release: _need-ver _need-origin _need-npm-credentials _need-master-branch version test
+release: _need-ver _need-origin _need-npm-credentials _need-master-branch version test update-license-year
 	@newVer=`json -f package.json version` || exit; \
 	 echo '-- Opening changelog...'; \
 	 $(EDITOR) CHANGELOG.md; \
@@ -109,42 +110,56 @@ release: _need-ver _need-origin _need-npm-credentials _need-master-branch versio
 update-readme: _update-readme-usage _update-readme-license _update-readme-dependencies _update-readme-changelog
 	@echo "-- README.md updated."
 
+# Updates LICENSE.md if the stated calendar year (e.g., '2015') / the end point in a calendar-year range (e.g., '2014-2015')
+# lies in the past; E.g., if the current calendary year is 2016, the first example is updated to '2015-2016', and the second
+# one to '2014-2016'.
+.PHONY: update-license-year
+update-license-year:
+	@f='LICENSE.md'; thisYear=`date +%Y`; yearRange=`sed -n 's/.*(c) \([0-9]\{4\}\)\(-[0-9]\{4\}\)\{0,1\}.*/\1\2/p' "$$f"`; \
+	 [[ -n $$yearRange ]] || { echo "Failed to extract calendar year(s) from '$$f'." >&2; exit 1; }; laterYear=$${yearRange#*-}; \
+   if (( laterYear < thisYear )); then \
+     replace -s '(\(c\) )([0-9]{4})(-[0-9]{4})?' '$$1$$2-'"$$thisYear" "$$f" || exit; \
+     echo "NOTE: '$$f' updated to reflect current calendar year, $$thisYear."; \
+   elif [[ $(MAKECMDGOALS) == 'update-license-year' ]]; then \
+   	 echo "('$$f' calendar year(s) are up-to-date: $$yearRange)"; \
+   fi
+
 # --------- Aux. targets
 
 # If applicable, replaces the usage read-me chapter with the current CLI help output, 
-# enclosed in a fenced codeblock and preceded by '$ <cmd>'.
+# enclosed in a fenced codeblock and preceded by '$ <cmd> --help'.
 # Replacement is attempted if the project at hand has a (at least one) CLI, as defined in the 'bin' key in package.json.
 # is an *object* that has (at least 1) property (rather than containing a string-scalar value that implies the package name as the CLI name).
 #  - If 'bin' has *multiple* properties, the *1st* is the one whose usage info is to be used.
 #    To change this, modify CLI_HELP_CMD in the shell command below.
-#  - The CLI should be invoked with `-h` to retrieve usage information.
-#    To change this, edit the value of CLI_HELP_ARGS below.
 .PHONY: _update-readme-usage
 # The arguments to pass to the CLI to have it output its help.
-CLI_HELP_ARGS:= -h
-# The exact, full text of the chapter heading to replace in README.md; watch for unintentional trailing whitespace. '#' must be represented as '\#'.
-README_HEADING_USAGE := \#\# Usage
+CLI_HELP_ARGS:= --help
+# Note that the recipe exits right away if no CLIs are found in 'package.json'.
+# TO DISABLE THIS RULE, REMOVE ALL OF ITS RECIPE LINES.
 _update-readme-usage:
 	@read -r cliName cliPath < <(json -f package.json bin | json -Ma key value | head -n 1) || exit 0; \
 	 CLI_HELP_CMD=( "$$cliPath" $(CLI_HELP_ARGS) ); \
 	 CLI_HELP_CMD_DISPLAY=( "$${CLI_HELP_CMD[@]}" ); CLI_HELP_CMD_DISPLAY[0]="$$cliName"; \
-	 newText=$$'\n```\n$$ '"$${CLI_HELP_CMD_DISPLAY[@]}"$$'\n\n'"$$( "$${CLI_HELP_CMD[@]}" )"$$'\n```\n' || { echo "Failed to update read-me chapter: usage: invoking CLI help failed: $${CLI_HELP_CMD[@]}" >&2; exit 1; }; \
+	 newText="$${CLI_HELP_CMD_DISPLAY[@]}"$$'\n\n'"$$( "$${CLI_HELP_CMD[@]}" )" || { echo "Failed to update read-me chapter: usage: invoking CLI help failed: $${CLI_HELP_CMD[@]}" >&2; exit 1; }; \
 	 newText="$${newText//\$$/$$\$$}"; \
 	 newText="$${newText//~/\~}"; \
-	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_USAGE)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->\s*?\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: usage." >&2; exit 1; }
+	 replace --count --quiet --multiline=false '(\n)(<!-- DO NOT EDIT .*usage.*?-->\n\s*?\n```\n\$$ )[\s\S]*?(\n```\n|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: usage." >&2; exit 1; }
+# !! REGRETTABLY, the ``` sequences in the line above break syntax coloring for the rest of the file in Sublime Text 3 - ?? unclear, how to work around that.
 
 #  - Replaces the '## License' chapter with the contents of LICENSE.md
 .PHONY: _update-readme-license
+# TO DISABLE THIS RULE, REMOVE ALL OF ITS RECIPE LINES.
 _update-readme-license:
 	@newText=$$'\n'"$$(< LICENSE.md)"$$'\n'; \
 	 newText="$${newText//\$$/$$\$$}"; \
 	 replace --count --quiet --multiline=false '(^|\n)(## License\n)[\s\S]*?(\n([ \t]*<!-- .*? -->\s*?\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: license." >&2; exit 1; }
 
-
 #  - Replaces the dependencies chapter with the current list of dependencies.
 .PHONY: _update-readme-dependencies
 # The exact, full text of the chapter heading to replace in README.md; watch for unintentional trailing whitespace. '#' must be represented as '\#'.
 README_HEADING_DEPENDENCIES := \#\#\# npm Dependencies
+# TO DISABLE THIS RULE, REMOVE ALL OF ITS RECIPE LINES.
 _update-readme-dependencies:
 	@newText=$$'\n'$$( \
 	 keys=( dependencies peerDependencies devDependencies  optionalDependencies ); \
@@ -167,11 +182,11 @@ _update-readme-dependencies:
 .PHONY: _update-readme-changelog
 # The exact, full text of the chapter heading to replace in README.md; watch for unintentional trailing whitespace. '#' must be represented as '\#'.
 README_HEADING_CHANGELOG := \#\# Changelog
+# TO DISABLE THIS RULE, REMOVE ALL OF ITS RECIPE LINES.
 _update-readme-changelog:
 	@newText=$$'\n'"$$(tail -n +3 CHANGELOG.md)"$$'\n'; \
 	 newText="$${newText//\$$/$$\$$}"; \
 	 replace --count --quiet --multiline=false '(^|\n)($(README_HEADING_CHANGELOG)\n)[\s\S]*?(\n([ \t]*<!-- .*? -->\s*?\n)?#|$$)' '$$1$$2'"$$newText"'$$3' README.md | fgrep -q ' (1)' || { echo "Failed to update read-me chapter: changelog." >&2; exit 1; }
-
 
 .PHONY: _need-master-branch
 _need-master-branch:
@@ -201,4 +216,3 @@ _need-origin:
 _need-npm-credentials:
 	@[[ `json -f package.json private` == 'true' ]] && exit 0; \
 	 egrep -q '^//registry.npmjs.org/:_password' ~/.npmrc || { echo "ERROR: npm-registry credentials not found. Please log in with 'npm login' in order to enable publishing." >&2; exit 2; }; \
-

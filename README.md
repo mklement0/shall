@@ -50,12 +50,12 @@ With [node.js](http://nodejs.org/) installed, install via the [npm registry](htt
 
 	npm install shall -g
 
-<!-- DO NOT EDIT: This chapter is updated by `make update-readme/release`. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
-
 ## Usage
 
+<!-- DO NOT EDIT THE FENCED CODE BLOCK and RETAIN THIS COMMENT: The fenced code block below is updated by `make update-readme/release` with CLI usage information. -->
+
 ```
-$ shall -h
+$ shall --help
 
 SYNOPSIS
   shall [-w shellA,...] [-q|-Q] [-p opts] script      [arg ...]
@@ -138,11 +138,11 @@ EXAMPLES
   
 ```
 
-<!-- DO NOT EDIT: This chapter is updated by `make update-readme/release`. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
+<!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the contents of 'LICENSE.md'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
 
 ## License
 
-Copyright (c) 2014 Michael Klement, released under the [MIT license](https://spdx.org/licenses/MIT#licenseText).
+Copyright (c) 2014-2015 Michael Klement, released under the [MIT license](https://spdx.org/licenses/MIT#licenseText).
 
 ### Acknowledgements
 
@@ -150,7 +150,7 @@ This project gratefully depends on the following open-source components, accordi
 
 [npm](https://www.npmjs.com/) dependencies below have optional suffixes denoting the type of dependency; the absence of a suffix denotes a required run-time dependency: `(D)` denotes a development-time-only dependency, `(O)` an optional dependency, and `(P)` a peer dependency.
 
-<!-- DO NOT EDIT: This chapter is updated by `make update-readme/release`. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
+<!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the dependencies from 'package.json'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
 
 ### npm Dependencies
 
@@ -159,7 +159,7 @@ This project gratefully depends on the following open-source components, accordi
 * [semver (D)](https://github.com/isaacs/node-semver)
 * [urchin (D)](https://github.com/tlevine/urchin)
 
-<!-- DO NOT EDIT: This chapter is updated by `make update-readme/release`. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
+<!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the contents of 'CHANGELOG.md'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
 
 ## Changelog
 

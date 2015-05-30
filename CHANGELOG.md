@@ -4,6 +4,9 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **v0.2.2** (2015-05-30):
+  * ???
+
 * **v0.2.1** (2015-05-27):
   * [fix] Options passed through with -p are no longer ignored on Linux.
   * [fix] Removed extraneous status output.
