@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/shall.svg)](http://badge.fury.io/js/shall)
+
 # shall
 
 A CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing on Unix-like systems.
@@ -152,7 +154,7 @@ This project gratefully depends on the following open-source components, accordi
 
 <!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the dependencies from 'package.json'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
 
-### npm Dependencies
+### npm dependencies
 
 * [json (D)](https://github.com/trentm/json)
 * [replace (D)](https://github.com/harthur/replace)
@@ -166,6 +168,9 @@ This project gratefully depends on the following open-source components, accordi
 Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
+
+* **v0.2.2** (2015-05-31):
+  * [doc] [npm registry badge[(https://badge.fury.io) added
 
 * **v0.2.1** (2015-05-27):
   * [fix] Options passed through with -p are no longer ignored on Linux.
