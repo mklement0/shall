@@ -1,4 +1,4 @@
-[![npm version](https://badge.fury.io/js/shall.svg)](http://badge.fury.io/js/shall)
+[![npm version](https://img.shields.io/npm/v/shall.svg)](https://npmjs.com/package/shall) [![license](https://img.shields.io/npm/l/shall.svg)](https://github.com/mklement0/shall/blob/master/LICENSE.md)
 
 # shall
 
@@ -169,8 +169,12 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **[v0.2.3](https://github.com/mklement0/shall/compare/v0.2.2...v0.2.3)** (2015-06-26):
+  * [doc] Read-me: npm badge changed to shields.io; license badge added; typo fixed.
+  * [dev] To-do added; Makefile updated.
+
 * **v0.2.2** (2015-05-31):
-  * [doc] [npm registry badge[(https://badge.fury.io) added
+  * [doc] [npm registry badge](https://badge.fury.io) added
 
 * **v0.2.1** (2015-05-27):
   * [fix] Options passed through with -p are no longer ignored on Linux.

@@ -213,7 +213,7 @@ EOF
 fi
 
 # Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.2.2"; echo "$kTHIS_NAME version ${ver#v}"; exit 0; }
+[[ $1 == '--version' ]] && { ver="v0.2.3"; echo "$kTHIS_NAME version ${ver#v}"; exit 0; }
 
 # Parse options
 shellList=$SHELLS isCmdStr=0 cmdStr= fromStdin=0 interactive=0 quietStdout=0 quietAll=0 extraPassThruOpts=
