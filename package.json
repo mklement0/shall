@@ -2,7 +2,7 @@
   "name": "shall",
   "description": "A CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.",
   "private": false,
-  "version": "0.2.3",
+  "version": "0.2.4",
   "os": [
     "!win32"
   ],

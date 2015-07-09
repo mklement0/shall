@@ -2,7 +2,14 @@
 
 kTHIS_NAME=$(basename "$BASH_SOURCE")
 
+# Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
+[[ $1 == '--version' ]] && { ver="v0.2.4"; echo "$kTHIS_NAME version ${ver#v}"$'\nFor license information and more, visit https://github.com/mklement0/shall'; exit 0; }
+
 unset CDPATH  # to prevent unpredictable `cd` behavior
+
+# NOTE:
+#       To remain compatible with FreeBSD as well, we AVOID PROCESS SUBSTITUTIONS in this script, 
+#       because there they're only supported with an extra configuration step that requires root privileges (`sudo mount -t fdescfs fdescfs /dev/fd`).
 
 # Helper function for exiting with error message due to runtime error.
 #   die [errMsg]
@@ -130,9 +137,9 @@ kREPL_HISTFILE=~/".${kTHIS_NAME}_history"
 if [[ $1 == '--help' || $1 == '-h' ]]; then
   cat <<EOF
 SYNOPSIS
-  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] script      [arg ...]
-  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] -c command  [arg0 arg ...]
-  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] [-s          arg ...]
+  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts]     script  [arg...]
+  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts]  -c command [arg0 arg...]
+  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] [-s          arg...]
   $kTHIS_NAME [-w shellA,...]  -i
 
 DESCRIPTION
@@ -212,9 +219,6 @@ EOF
     exit 0
 fi
 
-# Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.2.3"; echo "$kTHIS_NAME version ${ver#v}"; exit 0; }
-
 # Parse options
 shellList=$SHELLS isCmdStr=0 cmdStr= fromStdin=0 interactive=0 quietStdout=0 quietAll=0 extraPassThruOpts=
 while getopts :w:l:p:qQc:si opt; do  # $opt will receive the option *letters* one by one; a trailing : means that an arg. is required.
@@ -254,7 +258,8 @@ done
 passThruOpts=()
 if [[ -n $extraPassThruOpts ]]; then
   # If options to pass through were explicitly specified, parse them into an array now.
-  IFS=$'\n' read -d ' ' -ra passThruOpts < <(printf '%s\n' "$extraPassThruOpts" | xargs -n 1 printf '%s\n')
+  # Note: We pass them through xargs -n 1 so as to correctly recognize embedded quoted strings.
+  IFS=$'\n' read -d '' -ra passThruOpts <<<"$(xargs -n 1 printf '%s\n' <<<"$extraPassThruOpts")"
 fi
 # The -c and -s options are special: 
 #   -c: its argument is the command to execute and must be specified *separately* from -c

@@ -1,6 +1,6 @@
 [![npm version](https://img.shields.io/npm/v/shall.svg)](https://npmjs.com/package/shall) [![license](https://img.shields.io/npm/l/shall.svg)](https://github.com/mklement0/shall/blob/master/LICENSE.md)
 
-# shall
+# shall &mdash; introduction
 
 A CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing on Unix-like systems.
 
@@ -20,7 +20,7 @@ The syntax is modeled on that of the underlying shells.
 
 See the [Usage](#usage) chapter for details.
 
-## Quick Examples
+# Examples
 
 ```sh
 
@@ -35,24 +35,42 @@ $ shall -c 'echo "Hello from $0."'
 # Pass a script to all shells via stdin, plus an argument on the command line.
 echo 'echo "Passed to $0: $1"' | shall -s one
 
-# Execute script 'foo' with argument 'bar' in all shells.
-shall foo bar
+# Execute script 'foo-script' with argument 'bar' in all shells.
+shall foo-script bar
 
-# Print the type of the 'which' command in bash and zsh.
+# Print the type of the 'which' command in Bash and Zsh.
 shall -l bash,zsh -c 'type which'
 
-# Enter a REPL that evaluates commands in both bash and dash.
+# Enter a REPL that evaluates commands in both Bash and Dash.
 SHELLS=bash,dash shall -i
 
 ```
 
-## Installation
+# Installation
 
-With [node.js](http://nodejs.org/) installed, install via the [npm registry](https://www.npmjs.com/) (you may have to prepend `sudo`):
+**Supported platforms**
 
-	npm install shall -g
+* When installing from the **npm registry**: all Unix-like platforms supported by Node.js.
+* When installing **manually**: any **Unix-like** platform with **Bash**.
 
-## Usage
+## Installation from the npm registry
+
+With [Node.js](http://nodejs.org/) or [io.js](https://iojs.org/) installed, install [the package](https://www.npmjs.com/package/shall) as follows:
+
+    [sudo] npm install shall -g
+
+**Note**:
+
+* Whether you need `sudo` depends on how you installed Node.js / io.js and whether you've [changed permissions later](https://docs.npmjs.com/getting-started/fixing-npm-permissions); if you get an `EACCES` error, try again with `sudo`.
+* The `-g` ensures [_global_ installation](https://docs.npmjs.com/getting-started/installing-npm-packages-globally) and is needed to put `shall` in your system's `$PATH`.
+
+## Manual installation
+
+* Download [the CLI](https://raw.githubusercontent.com/mklement0/shall/stable/bin/shall) as `shall`.
+* Make it executable with `chmod +x shall`.
+* Move it or symlink it to a folder in your `$PATH`, such as `/usr/local/bin` (OSX) or `/usr/bin` (Linux).
+
+# Usage
 
 <!-- DO NOT EDIT THE FENCED CODE BLOCK and RETAIN THIS COMMENT: The fenced code block below is updated by `make update-readme/release` with CLI usage information. -->
 
@@ -60,9 +78,9 @@ With [node.js](http://nodejs.org/) installed, install via the [npm registry](htt
 $ shall --help
 
 SYNOPSIS
-  shall [-w shellA,...] [-q|-Q] [-p opts] script      [arg ...]
-  shall [-w shellA,...] [-q|-Q] [-p opts] -c command  [arg0 arg ...]
-  shall [-w shellA,...] [-q|-Q] [-p opts] [-s          arg ...]
+  shall [-w shellA,...] [-q|-Q] [-p opts]     script  [arg...]
+  shall [-w shellA,...] [-q|-Q] [-p opts]  -c command [arg0 arg...]
+  shall [-w shellA,...] [-q|-Q] [-p opts] [-s          arg...]
   shall [-w shellA,...]  -i
 
 DESCRIPTION
@@ -142,11 +160,11 @@ EXAMPLES
 
 <!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the contents of 'LICENSE.md'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
 
-## License
+# License
 
 Copyright (c) 2014-2015 Michael Klement, released under the [MIT license](https://spdx.org/licenses/MIT#licenseText).
 
-### Acknowledgements
+## Acknowledgements
 
 This project gratefully depends on the following open-source components, according to the terms of their respective licenses.
 
@@ -154,7 +172,7 @@ This project gratefully depends on the following open-source components, accordi
 
 <!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the dependencies from 'package.json'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
 
-### npm dependencies
+## npm dependencies
 
 * [json (D)](https://github.com/trentm/json)
 * [replace (D)](https://github.com/harthur/replace)
@@ -163,14 +181,18 @@ This project gratefully depends on the following open-source components, accordi
 
 <!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the contents of 'CHANGELOG.md'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
 
-## Changelog
+# Changelog
 
 Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **[v0.2.4](https://github.com/mklement0/shall/compare/v0.2.3...v0.2.4)** (2015-07-08):
+  * [fix] Pass-through option-arguments with embedded spaces are now handled correctly; process substitution replaced with alternative so as to improve FreeBSD compatibility.
+  * [doc] Read-me improved, notably: manual-installation instructions added.
+
 * **[v0.2.3](https://github.com/mklement0/shall/compare/v0.2.2...v0.2.3)** (2015-06-26):
-  * [doc] Read-me: npm badge changed to shields.io; license badge added; typo fixed.
+  * [doc] Read-me: npm badge changed to [shields.io](http://shields.io); license badge added; typo fixed.
   * [dev] To-do added; Makefile updated.
 
 * **v0.2.2** (2015-05-31):
