@@ -1,10 +1,28 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+**Contents**
+
+- [shall &mdash; introduction](#shall-&mdash-introduction)
+- [Examples](#examples)
+- [Installation](#installation)
+  - [Installation from the npm registry](#installation-from-the-npm-registry)
+  - [Manual installation](#manual-installation)
+- [Usage](#usage)
+- [License](#license)
+  - [Acknowledgements](#acknowledgements)
+  - [npm dependencies](#npm-dependencies)
+- [Changelog](#changelog)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 [![npm version](https://img.shields.io/npm/v/shall.svg)](https://npmjs.com/package/shall) [![license](https://img.shields.io/npm/l/shall.svg)](https://github.com/mklement0/shall/blob/master/LICENSE.md)
 
 # shall &mdash; introduction
 
-A CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing on Unix-like systems.
+A Unix CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.
 
-**`shall`** (for *sh*ell with *all* (POSIX-like) shells) offers a convenient way of running a given shell script or shell command
+**`shall`** (for ***sh***ell with ***all*** (POSIX-like) shells) offers a convenient way of running a given shell script or shell command
 with a default set or specifiable set of POSIX-like shells, so as to facilitate testing of portable (POSIX-compliant, cross-shell) shell code.
 
 By default, the following shells are targeted, if installed: **sh, dash, bash, zsh, ksh**
@@ -50,8 +68,8 @@ SHELLS=bash,dash shall -i
 
 **Supported platforms**
 
-* When installing from the **npm registry**: all Unix-like platforms supported by Node.js.
-* When installing **manually**: any **Unix-like** platform with **Bash**.
+* When installing from the [**npm registry**](https://www.npmjs.com): all **Unix-like** platforms supported by [Node.js](http://nodejs.org/) with [**Bash**](http://www.gnu.org/software/bash/) installed.
+* When installing **manually**: any **Unix-like** platform with **Bash** installed.
 
 ## Installation from the npm registry
 
@@ -174,6 +192,7 @@ This project gratefully depends on the following open-source components, accordi
 
 ## npm dependencies
 
+* [doctoc (D)](https://github.com/thlorenz/doctoc)
 * [json (D)](https://github.com/trentm/json)
 * [replace (D)](https://github.com/harthur/replace)
 * [semver (D)](https://github.com/isaacs/node-semver)
@@ -189,7 +208,7 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 * **[v0.2.4](https://github.com/mklement0/shall/compare/v0.2.3...v0.2.4)** (2015-07-08):
   * [fix] Pass-through option-arguments with embedded spaces are now handled correctly; process substitution replaced with alternative so as to improve FreeBSD compatibility.
-  * [doc] Read-me improved, notably: manual-installation instructions added.
+  * [doc] Read-me improved, notably: manual-installation instructions added, TOC added.
 
 * **[v0.2.3](https://github.com/mklement0/shall/compare/v0.2.2...v0.2.3)** (2015-06-26):
   * [doc] Read-me: npm badge changed to [shields.io](http://shields.io); license badge added; typo fixed.

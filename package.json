@@ -34,7 +34,14 @@
   ],
   "author": "Michael Klement <mklement0@gmail.com> (http://same2u.net)",
   "license": "MIT",
+  "net_same2u": {
+    "make_pkg": {
+      "tocOn": true,
+      "tocTitle": "**Contents**"
+    }
+  },
   "devDependencies": {
+    "doctoc": "^0.14.2",
     "json": "^9.0.3",
     "replace": "^0.3.0",
     "semver": "^4.2.0",

@@ -6,7 +6,7 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 * **[v0.2.4](https://github.com/mklement0/shall/compare/v0.2.3...v0.2.4)** (2015-07-08):
   * [fix] Pass-through option-arguments with embedded spaces are now handled correctly; process substitution replaced with alternative so as to improve FreeBSD compatibility.
-  * [doc] Read-me improved, notably: manual-installation instructions added.
+  * [doc] Read-me improved, notably: manual-installation instructions added, TOC added.
 
 * **[v0.2.3](https://github.com/mklement0/shall/compare/v0.2.2...v0.2.3)** (2015-06-26):
   * [doc] Read-me: npm badge changed to [shields.io](http://shields.io); license badge added; typo fixed.
