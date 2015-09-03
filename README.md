@@ -1,3 +1,5 @@
+[![npm version](https://img.shields.io/npm/v/shall.svg)](https://npmjs.com/package/shall) [![license](https://img.shields.io/npm/l/shall.svg)](https://github.com/mklement0/shall/blob/master/LICENSE.md)
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -15,8 +17,6 @@
 - [Changelog](#changelog)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-[![npm version](https://img.shields.io/npm/v/shall.svg)](https://npmjs.com/package/shall) [![license](https://img.shields.io/npm/l/shall.svg)](https://github.com/mklement0/shall/blob/master/LICENSE.md)
 
 # shall &mdash; introduction
 
