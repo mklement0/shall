@@ -3,7 +3,7 @@
 kTHIS_NAME=$(basename "$BASH_SOURCE")
 
 # Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.2.4"; echo "$kTHIS_NAME version ${ver#v}"$'\nFor license information and more, visit https://github.com/mklement0/shall'; exit 0; }
+[[ $1 == '--version' ]] && { ver="v0.2.5"; echo "$kTHIS_NAME version ${ver}"$'\nFor license information and more, visit https://github.com/mklement0/shall'; exit 0; }
 
 unset CDPATH  # to prevent unpredictable `cd` behavior
 

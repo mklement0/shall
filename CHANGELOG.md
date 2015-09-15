@@ -4,6 +4,9 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **[v0.2.5](https://github.com/mklement0/shall/compare/v0.2.4...v0.2.5)** (2015-09-15):
+  * [dev] Makefile improvements; various other behind-the-scenes tweaks.
+
 * **[v0.2.4](https://github.com/mklement0/shall/compare/v0.2.3...v0.2.4)** (2015-07-08):
   * [fix] Pass-through option-arguments with embedded spaces are now handled correctly; process substitution replaced with alternative so as to improve FreeBSD compatibility.
   * [doc] Read-me improved, notably: manual-installation instructions added, TOC added.
