@@ -1,9 +1,103 @@
 #!/usr/bin/env bash
 
-kTHIS_NAME=$(basename "$BASH_SOURCE")
+# --- STANDARD SCRIPT-GLOBAL CONSTANTS
 
-# Output version number and exit, if requested. Note that the `ver="..."` statement is automatically updated by `make version VER=<newVer>`.
-[[ $1 == '--version' ]] && { ver="v0.2.5"; echo "$kTHIS_NAME version ${ver}"$'\nFor license information and more, visit https://github.com/mklement0/shall'; exit 0; }
+kTHIS_NAME=${BASH_SOURCE##*/}
+kTHIS_HOMEPAGE='https://github.com/mklement0/shall'
+kTHIS_VERSION='v0.2.6' # NOTE: This assignment is automatically updated by `make version VER=<newVer>` - DO keep the 'v' prefix.
+
+unset CDPATH  # To prevent unexpected `cd` behavior.
+
+# --- Begin: STANDARD HELPER FUNCTIONS
+
+die() { echo "$kTHIS_NAME: ERROR: ${1:-"ABORTING due to unexpected error."}" 1>&2; exit ${2:-1}; }
+dieSyntax() { echo "$kTHIS_NAME: ARGUMENT ERROR: ${1:-"Invalid argument(s) specified."} Use -h for help." 1>&2; exit 2; }
+
+# SYNOPSIS
+#   openUrl <url>
+# DESCRIPTION
+#   Opens the specified URL in the system's default browser.
+openUrl() {
+  local url=$1 platform=$(uname) cmd=()
+  case $platform in
+    'Darwin') # OSX
+      cmd=( open "$url" )
+      ;;
+    'CYGWIN_'*) # Cygwin on Windows; must call cmd.exe with its `start` builtin
+      cmd=( cmd.exe /c start '' "$url " )  # !! Note the required trailing space.
+      ;;
+    'MINGW32_'*) # MSYS or Git Bash on Windows; they come with a Unix `start` binary
+      cmd=( start '' "$url" )
+      ;;
+    *) # Otherwise, assume a Freedesktop-compliant OS, which includes many Linux distros, PC-BSD, OpenSolaris, ...
+      cmd=( xdg-open "$url" )
+      ;; 
+  esac
+  "${cmd[@]}" || { echo "Cannot locate or failed to open default browser; please go to '$url' manually." >&2; return 1; }
+}
+
+# Prints the embedded Markdown-formatted man-page source to stdout.
+printManPageSource() {
+  sed -n -e $'/^: <<\'EOF_MAN_PAGE\'/,/^EOF_MAN_PAGE/ { s///; t\np;}' "$BASH_SOURCE"
+}
+
+# Opens the man page, if installed; otherwise, tries to display the embedded Markdown-formatted man-page source; if all else fails: tries to display the man page online.
+openManPage() {
+  local pager embeddedText 
+  if ! man 1 "$kTHIS_NAME" 2>/dev/null; then
+    # 2nd attempt: if present, display the embedded Markdown-formatted man-page source
+    embeddedText=$(printManPageSource)
+    if [[ -n $embeddedText ]]; then
+      pager='more'
+      command -v less &>/dev/null && pager='less' # see if the non-standard `less` is available, because it's preferable to the POSIX utility `more`
+      printf '%s\n' "$embeddedText" | "$pager"
+    else # 3rd attempt: open the the man page on the utility's website
+      openUrl "${kTHIS_HOMEPAGE}/doc/${kTHIS_NAME}.md"
+    fi
+  fi  
+}
+
+# Prints the contents of the synopsis chapter of the embedded Markdown-formatted man-page source for quick reference.
+printUsage() {
+  local embeddedText
+  # Extract usage information from the SYNOPSIS chapter of the embedded Markdown-formatted man-page source.
+  embeddedText=$(sed -n -e $'/^: <<\'EOF_MAN_PAGE\'/,/^EOF_MAN_PAGE/!d; /^## SYNOPSIS$/,/^#/{ s///; t\np; }' "$BASH_SOURCE")
+  if [[ -n $embeddedText ]]; then
+    # Print extracted synopsis chapter - remove backticks for uncluttered display.
+    printf '%s\n\n' "$embeddedText" | tr -d '`'
+  else # No SYNOPIS chapter found; fall back to displaying the man page.
+    echo "WARNING: usage information not found; opening man page instead." >&2
+    openManPage
+  fi
+}
+
+# --- End: STANDARD HELPER FUNCTIONS
+
+# ---  PROCESS STANDARD, OUTPUT-INFO-THEN-EXIT OPTIONS.
+case $1 in
+  --version)
+    # Output version number and exit, if requested.
+    echo "$kTHIS_NAME $kTHIS_VERSION"$'\nFor license information and more, visit '"$kTHIS_HOMEPAGE"; exit 0
+    ;;
+  -h|--help)
+    # Print usage information and exit.
+    printUsage; exit
+    ;;
+  --man)
+    # Display the manual page and exit, falling back to printing the embedded man-page source.
+    openManPage; exit
+    ;;
+  --man-source) # private option, used by `make update-man`
+    # Print raw, embedded Markdown-formatted man-page source and exit
+    printManPageSource; exit
+    ;;
+  --home)
+    # Open the home page and exit.
+    openUrl "$kTHIS_HOMEPAGE"; exit
+    ;;
+esac
+
+# --- Begin: FUNCTIONS
 
 unset CDPATH  # to prevent unpredictable `cd` behavior
 
@@ -124,6 +218,8 @@ rreadlink() ( # execute function in a *subshell* to localize the effect of `cd`.
 
 )
 
+# --- MAIN BODY
+
 # --------- Constants
 
 # The shells to target by default, if installed.
@@ -132,93 +228,6 @@ kDEFAULT_SHELLS=( sh dash bash zsh ksh )
 kREPL_HISTFILE=~/".${kTHIS_NAME}_history"
 
 # ----------
-
-# Command-line help.
-if [[ $1 == '--help' || $1 == '-h' ]]; then
-  cat <<EOF
-SYNOPSIS
-  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts]     script  [arg...]
-  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts]  -c command [arg0 arg...]
-  $kTHIS_NAME [-w shellA,...] [-q|-Q] [-p opts] [-s          arg...]
-  $kTHIS_NAME [-w shellA,...]  -i
-
-DESCRIPTION
-  Invokes a shell script or command with multiple POSIX-like shells in
-  sequence for cross-shell compatibility testing.
-
-  Pass a *script filename* as the first operand, optionally followed by 
-  arguments to pass to the script.
-  If $kTHIS_NAME is in your PATH, you can also create executable scripts
-  based on it by using the following shebang line:
-    #!/usr/bin/env $kTHIS_NAME
-  
-  Use -c to specify a *command string* instead; note that the first argument
-  after the command string is assigned to \$0(!).
-  
-  Use -s to read from *stdin*; -s is optional, if no arguments are passed.
-  
-  Use -i to enter *interactive mode*: a simple REPL, where one command
-  at a time is read from the terminal and executed.
-
-  By default, the following shells - if installed - are targeted:
-    $(sed 's/ /, /g' <<<"${kDEFAULT_SHELLS[@]}")
-
-  To specify shells explicitly, use either of the following (in order of
-  precedence):
-   - Option -w shellA,...; e.g., $kTHIS_NAME -w bash,zsh ...
-   - Environment variable 'SHELLS'; e.g.: SHELLS=bash,zsh $kTHIS_NAME ...
-
-  -q, -Q
-    Quiet modes: 
-     -q suppresses stdout output from the command/script invoked.
-     -Q suppresses both stdout and stderr.
-    Note that per-shell and overall success status information is still
-    reported.
-
-  -p 
-    Allows you to pass options through to the shells invoked, as a single
-    argument; e.g., -p '-e -o noglob'
-    Make sure all shells targeted support the specified options; all
-    POSIX-like should support the same options as the \`set\` builtin
-    (see http://is.gd/MJPvPr).
-
-NOTES
-  The exit code reflects the number of shells that reported failure; i.e.,
-  it is 0 if all shells ran the command successfully.
-
-  Output is selectively colored, but only when outputting to a terminal.
-  Note that only $kTHIS_NAME's *own* errors are sent to stderr, whereas
-  captured command/script output (interleaved stdout and stderr) is always
-  reported via stdout.
-  When outputting to a terminal and a command/script's invocation fails for a
-  given shell, the (entire) output captured is printed in red.
-  
-  Timing information is reported for each shell.
-  
-  In interactive mode (-i), history is maintained in file ${kREPL_HISTFILE/#$HOME/\$HOME}
-  
-  To get the name of the running shell from within your code in any of the
-  invocation scenarios, use:
-    \$(ps -o comm= \$\$)
-  When using a command string (-c) or stdin input (-s), you can also
-  use \$0
-
-EXAMPLES
-    # Echo the name of each executing shell.
-  $kTHIS_NAME -c 'echo "Hello from \$0."'
-    # Also echo the 1st argument passed.                
-  echo 'echo "Passed to \$0: \$1"' | $kTHIS_NAME -s one
-    # Execute a script, passing the -e shell option (abort on errror).
-  $kTHIS_NAME -p '-e' someScript
-    # Print the type of the 'which' command in bash and zsh.
-  $kTHIS_NAME -w bash,zsh -c 'type which'
-    # Enter a REPL that evaluates commands in both bash and dash.
-  SHELLS=bash,dash $kTHIS_NAME -i
-  
-EOF
-    exit 0
-fi
-
 # Parse options
 shellList=$SHELLS isCmdStr=0 cmdStr= fromStdin=0 interactive=0 quietStdout=0 quietAll=0 extraPassThruOpts=
 while getopts :w:l:p:qQc:si opt; do  # $opt will receive the option *letters* one by one; a trailing : means that an arg. is required.
@@ -449,3 +458,182 @@ while :; do # loop is for -i only
 done
 
 exit $ecOverall
+
+####
+# MAN PAGE MARKDOWN SOURCE
+#  - Place a Markdown-formatted version of the man page for this script
+#    inside the here-document below.
+#    The document must be formatted to look good in all 3 viewing scenarios:
+#     - as a man page, after conversion to ROFF with marked-man
+#     - as plain text (raw Markdown source)
+#     - as HTML (rendered Markdown)
+#  Markdown formatting tips:
+#   - GENERAL
+#     To support plain-text rendering in the terminal, limit all lines to 80 chars.,
+#     and, for similar rendering as HTML, *end every line with 2 trailing spaces*.
+#   - HEADINGS
+#     - For better plain-text rendering, leave an empty line after a heading
+#       marked-man will remove it from the ROFF version.
+#     - The first heading must be a level-1 heading containing the utility
+#       name and very brief description; append the manual-section number 
+#       directly to the CLI name; e.g.:
+#         # foo(1) - does bar
+#     - The 2nd, level-2 heading must be '## SYNOPSIS' and the chapter's body
+#       must render reasonably as plain text, because it is printed to stdout
+#       when  `-h`, `--help` is specified:
+#         Use 4-space indentation without markup for both the syntax line and the
+#         block of brief option descriptions; represent option-arguments and operands
+#         in angle brackets; e.g., '<foo>'
+#     - All other headings should be level-2 headings in ALL-CAPS.
+#   - TEXT
+#      - Use NO indentation for regular chapter text; if you do, it will 
+#        be indented further than list items.
+#      - Use 4-space indentation, as usual, for code blocks.
+#      - Markup character-styling markup translates to ROFF rendering as follows:
+#         `...` and **...** render as bolded (red) text
+#         _..._ and *...* render as word-individually underlined text
+#   - LISTS
+#      - Indent list items by 2 spaces for better plain-text viewing, but note
+#        that the ROFF generated by marked-man still renders them unindented.
+#      - End every list item (bullet point) itself with 2 trailing spaces too so
+#        that it renders on its own line.
+#      - Avoid associating more than 1 paragraph with a list item, if possible,
+#        because it requires the following trick, which hampers plain-text readability:
+#        Use '&nbsp;<space><space>' in lieu of an empty line.
+####
+: <<'EOF_MAN_PAGE'
+# shall(1) - cross-shell compatibility testing
+
+## SYNOPSIS
+
+Cross-POSIX-compatible-shell testing:
+
+Run a script file:
+
+    shall [-w <shellA>,...] [-q|-Q] [-p <opts>]     <script> [<arg>...]
+
+Execute a command string:
+
+    shall [-w <shellA>,...] [-q|-Q] [-p <opts>]  -c <cmd>    [<arg0> <arg>...]
+
+Execute commands specified via stdin:
+
+    shall [-w <shellA>,...] [-q|-Q] [-p <opts>] [-s           <arg>...]
+
+Start a REPL (run commands interactively):
+
+    shall [-w <shellA>,...]  -i
+
+Default shells targeted are `sh`, and, if installed, `dash`, `bash`, `zsh`, `ksh`.  
+Override with `-w` or environment variable `SHELLS`, using a comma-separated  
+list without spaces; e.g., `-w bash,ksh,zsh` or `SHELLS=bash,ksh,zsh`.
+
+`-q`, `-Q` quiets stdout, stdout + stderr from the script / commands invoked.  
+`-p` passes options through to the target shells.
+
+Standard options: `--help`, `--man`, `--version`, `--home`
+
+## DESCRIPTION
+
+`shall` invokes a shell script or command with multiple POSIX-like shells in  
+sequence for cross-shell compatibility testing.
+
+Pass a script *filename* as the first operand, optionally followed by arguments  
+to pass to the script.  
+If `shall` is in your system's path, you can also create executable scripts  
+based on it by using the following shebang line:
+
+    #!/usr/bin/env shall
+
+Use `-c` to specify a *command* string instead; note that the first argument  
+after the command string is assigned to `$0`(!).
+
+Use `-s` to read from *stdin*; `-s` is optional if no arguments are passed.
+
+Use `-i` to enter *interactive* mode: a simple REPL, where one command at a  
+time is read from the terminal and executed.
+
+By default, the following shells - if installed - are targeted:
+
+    sh dash bash zsh ksh
+
+To specify shells explicitly, use either of the following (in order of
+precedence):
+
+ - Option `-w <shellA>,...`; e.g., `shall -w bash,zsh ...`
+ - Environment variable `SHELLS`; e.g.: `SHELLS=bash,zsh shall ...`
+
+The exit code reflects the number of shells that reported failure; i.e.,  
+it is 0 if all shells ran the command successfully.
+
+Output is selectively colored, but only when outputting to a terminal.  
+Note that only `shall`'s own errors are sent to stderr, whereas captured  
+command/script output (interleaved stdout and stderr) is always reported via  
+stdout.  
+When outputting to a terminal and a command/script's invocation fails for a  
+given shell, the (entire) output captured is printed in red.
+
+Timing information is reported for each shell.
+
+In interactive mode (`-i`), history is maintained in file `~/.shall_history`.
+
+To get the name of the running shell from within your code in any of the  
+invocation scenarios, use `$(ps -o comm= $$)`  
+When using a command string (`-c`) or stdin input (`-s`), you can also use `$0`.
+
+## GLOBAL OPTIONS
+
+  * `-q`, `-Q`  
+    Quiet modes:   
+     `-q` suppresses stdout output from the command/script invoked.  
+     `-Q` suppresses both stdout and stderr.  
+    Note that per-shell and overall success status information is still  
+    reported.
+
+  * `-p`   
+    Allows you to pass options through to the shells invoked, as a single  
+    argument; e.g., `-p '-e -o noglob'`  
+    Make sure all shells targeted support the specified options; all  
+    POSIX-like shells should support the same options as the `set` builtin  
+    (see http://is.gd/MJPvPr).
+
+## STANDARD OPTIONS
+
+All standard options provide information only.
+
+ * `-h, --help`  
+   Prints the contents of the synopsis chapter to stdout for quick reference.
+
+ * `--man`  
+   Displays this manual page, which is a helpful alternative to using `man`,  
+   if the manual page isn't installed.
+
+ * `--version`  
+   Prints version information.
+  
+ * `--home`  
+   Opens this utility's home page in the system's default web browser.
+
+## LICENSE
+
+For license information, bug reports, and more, visit this utility's home page  
+by running `shall --home`
+
+## EXAMPLES
+
+      # Echo the name of each executing shell.
+    shall -c 'echo "Hello from $0."'
+
+      # Also echo the 1st argument passed.                
+    echo 'echo "Passed to $0: $1"' | shall -s one
+
+      # Execute a script, passing the -e shell option (abort on errror).
+    shall -p '-e' someScript
+
+      # Print the type of the 'which' command in bash and zsh.
+    shall -w bash,zsh -c 'type which'
+
+      # Enter a REPL that evaluates commands in both bash and dash.
+    SHELLS=bash,dash shall -i
+  
+EOF_MAN_PAGE

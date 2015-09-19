@@ -1,0 +1,201 @@
+.TH "SHALL" "1" "September 2015" "v0.2.6" ""
+.SH "NAME"
+\fBshall\fR \- cross\-shell compatibility testing
+.SH SYNOPSIS
+.P
+Cross\-POSIX\-compatible\-shell testing:
+.P
+Run a script file:
+.P
+.RS 2
+.nf
+shall [\-w <shellA>,\.\.\.] [\-q|\-Q] [\-p <opts>]     <script> [<arg>\.\.\.]
+.fi
+.RE
+.P
+Execute a command string:
+.P
+.RS 2
+.nf
+shall [\-w <shellA>,\.\.\.] [\-q|\-Q] [\-p <opts>]  \-c <cmd>    [<arg0> <arg>\.\.\.]
+.fi
+.RE
+.P
+Execute commands specified via stdin:
+.P
+.RS 2
+.nf
+shall [\-w <shellA>,\.\.\.] [\-q|\-Q] [\-p <opts>] [\-s           <arg>\.\.\.]
+.fi
+.RE
+.P
+Start a REPL (run commands interactively):
+.P
+.RS 2
+.nf
+shall [\-w <shellA>,\.\.\.]  \-i
+.fi
+.RE
+.P
+Default shells targeted are \fBsh\fP, and, if installed, \fBdash\fP, \fBbash\fP, \fBzsh\fP, \fBksh\fP\|\.
+.br
+Override with \fB\-w\fP or environment variable \fBSHELLS\fP, using a comma\-separated
+.br
+list without spaces; e\.g\., \fB\-w bash,ksh,zsh\fP or \fBSHELLS=bash,ksh,zsh\fP\|\.
+.P
+\fB\-q\fP, \fB\-Q\fP quiets stdout, stdout + stderr from the script / commands invoked\.
+.br
+\fB\-p\fP passes options through to the target shells\.
+.P
+Standard options: \fB\-\-help\fP, \fB\-\-man\fP, \fB\-\-version\fP, \fB\-\-home\fP
+.SH DESCRIPTION
+.P
+\fBshall\fP invokes a shell script or command with multiple POSIX\-like shells in
+.br
+sequence for cross\-shell compatibility testing\.
+.P
+Pass a script \fIfilename\fR as the first operand, optionally followed by arguments
+.br
+to pass to the script\.
+.br
+If \fBshall\fP is in your system's path, you can also create executable scripts
+.br
+based on it by using the following shebang line:
+.P
+.RS 2
+.nf
+#!/usr/bin/env shall
+.fi
+.RE
+.P
+Use \fB\-c\fP to specify a \fIcommand\fR string instead; note that the first argument
+.br
+after the command string is assigned to \fB$0\fP(!)\.
+.P
+Use \fB\-s\fP to read from \fIstdin\fR; \fB\-s\fP is optional if no arguments are passed\.
+.P
+Use \fB\-i\fP to enter \fIinteractive\fR mode: a simple REPL, where one command at a
+.br
+time is read from the terminal and executed\.
+.P
+By default, the following shells \- if installed \- are targeted:
+.P
+.RS 2
+.nf
+sh dash bash zsh ksh
+.fi
+.RE
+.P
+To specify shells explicitly, use either of the following (in order of
+precedence):
+.RS 0
+.IP \(bu 2
+Option \fB\-w <shellA>,\.\.\.\fP; e\.g\., \fBshall \-w bash,zsh \.\.\.\fP
+.IP \(bu 2
+Environment variable \fBSHELLS\fP; e\.g\.: \fBSHELLS=bash,zsh shall \.\.\.\fP
+
+.RE
+.P
+The exit code reflects the number of shells that reported failure; i\.e\.,
+.br
+it is 0 if all shells ran the command successfully\.
+.P
+Output is selectively colored, but only when outputting to a terminal\.
+.br
+Note that only \fBshall\fP\|'s own errors are sent to stderr, whereas captured
+.br
+command/script output (interleaved stdout and stderr) is always reported via
+.br
+stdout\.
+.br
+When outputting to a terminal and a command/script's invocation fails for a
+.br
+given shell, the (entire) output captured is printed in red\.
+.P
+Timing information is reported for each shell\.
+.P
+In interactive mode (\fB\-i\fP), history is maintained in file \fB~/\.shall_history\fP\|\.
+.P
+To get the name of the running shell from within your code in any of the
+.br
+invocation scenarios, use \fB$(ps \-o comm= $$)\fP
+.br
+When using a command string (\fB\-c\fP) or stdin input (\fB\-s\fP), you can also use \fB$0\fP\|\.
+.SH GLOBAL OPTIONS
+.RS 0
+.IP \(bu 2
+\fB\-q\fP, \fB\-Q\fP
+.br
+Quiet modes:
+.br
+ \fB\-q\fP suppresses stdout output from the command/script invoked\.
+.br
+ \fB\-Q\fP suppresses both stdout and stderr\.
+.br
+Note that per\-shell and overall success status information is still
+.br
+reported\.
+.IP \(bu 2
+\fB\-p\fP
+.br
+Allows you to pass options through to the shells invoked, as a single
+.br
+argument; e\.g\., \fB\-p '\-e \-o noglob'\fP
+.br
+Make sure all shells targeted support the specified options; all
+.br
+POSIX\-like shells should support the same options as the \fBset\fP builtin
+.br
+(see http://is\.gd/MJPvPr)\.
+
+.RE
+.SH STANDARD OPTIONS
+.P
+All standard options provide information only\.
+.RS 0
+.IP \(bu 2
+\fB\-h, \-\-help\fP
+.br
+Prints the contents of the synopsis chapter to stdout for quick reference\.
+.IP \(bu 2
+\fB\-\-man\fP
+.br
+Displays this manual page, which is a helpful alternative to using \fBman\fP,
+.br
+if the manual page isn't installed\.
+.IP \(bu 2
+\fB\-\-version\fP
+.br
+Prints version information\.
+.IP \(bu 2
+\fB\-\-home\fP
+.br
+Opens this utility's home page in the system's default web browser\.
+
+.RE
+.SH LICENSE
+.P
+For license information, bug reports, and more, visit this utility's home page
+.br
+by running \fBshall \-\-home\fP
+.SH EXAMPLES
+.P
+.RS 2
+.nf
+  # Echo the name of each executing shell\.
+shall \-c 'echo "Hello from $0\."'
+
+  # Also echo the 1st argument passed\.                
+echo 'echo "Passed to $0: $1"' | shall \-s one
+
+  # Execute a script, passing the \-e shell option (abort on errror)\.
+shall \-p '\-e' someScript
+
+  # Print the type of the 'which' command in bash and zsh\.
+shall \-w bash,zsh \-c 'type which'
+
+  # Enter a REPL that evaluates commands in both bash and dash\.
+SHELLS=bash,dash shall \-i
+.fi
+.RE
+

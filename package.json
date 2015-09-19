@@ -2,7 +2,7 @@
   "name": "shall",
   "description": "Unix CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.",
   "private": false,
-  "version": "0.2.5",
+  "version": "0.2.6",
   "os": [
     "!win32"
   ],
@@ -37,14 +37,17 @@
   "net_same2u": {
     "make_pkg": {
       "tocOn": true,
-      "tocTitle": "**Contents**"
+      "tocTitle": "**Contents**",
+      "manOn": true
     }
   },
   "devDependencies": {
     "doctoc": "^0.14.2",
     "json": "^9.0.3",
+    "marked-man": "^0.1.5",
     "replace": "^0.3.0",
     "semver": "^4.2.0",
     "urchin": "^0.0.5"
-  }
+  },
+  "man": "./man/shall.1"
 }

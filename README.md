@@ -20,10 +20,13 @@
 
 # shall &mdash; introduction
 
-A Unix CLI and REPL for invoking shell scripts or commands with multiple POSIX-like shells for portability testing.
+`shall` is a Unix CLI and REPL for invoking shell scripts or commands with
+multiple POSIX-like shells for portability testing.
 
-**`shall`** (for ***sh***ell with ***all*** (POSIX-like) shells) offers a convenient way of running a given shell script or shell command
-with a default set or specifiable set of POSIX-like shells, so as to facilitate testing of portable (POSIX-compliant, cross-shell) shell code.
+**`shall`** (for ***sh***ell with ***all*** (POSIX-like) shells) offers a
+convenient way of running a given shell script or shell command with a default
+set or specifiable set of POSIX-like shells, so as to facilitate testing of
+portable (POSIX-compliant, cross-shell) shell code.
 
 By default, the following shells are targeted, if installed: **sh, dash, bash, zsh, ksh**
 
@@ -36,7 +39,8 @@ Each shell's execution is automatically timed to allow performance comparisons.
 
 The syntax is modeled on that of the underlying shells.
 
-See the [Usage](#usage) chapter for details.
+See the examples below, concise [usage information](#usage) further below,
+or read the [manual](doc/shall.md).
 
 # Examples
 
@@ -73,6 +77,8 @@ SHELLS=bash,dash shall -i
 
 ## Installation from the npm registry
 
+<sup>Note: Even if you don't use Node.js, its package manager, `npm`, works across platforms and is easy to install; try [`curl -L http://git.io/n-install | bash`](https://github.com/mklement0/n-install)</sup>
+
 With [Node.js](http://nodejs.org/) or [io.js](https://iojs.org/) installed, install [the package](https://www.npmjs.com/package/shall) as follows:
 
     [sudo] npm install shall -g
@@ -90,90 +96,40 @@ With [Node.js](http://nodejs.org/) or [io.js](https://iojs.org/) installed, inst
 
 # Usage
 
+Find concise usage information below; for complete documentation, read the [manual online](doc/shall.md), or, once installed, run `man shall` (`shall --man` if installed manually).
+
 <!-- DO NOT EDIT THE FENCED CODE BLOCK and RETAIN THIS COMMENT: The fenced code block below is updated by `make update-readme/release` with CLI usage information. -->
 
 ```nohighlight
 $ shall --help
 
-SYNOPSIS
-  shall [-w shellA,...] [-q|-Q] [-p opts]     script  [arg...]
-  shall [-w shellA,...] [-q|-Q] [-p opts]  -c command [arg0 arg...]
-  shall [-w shellA,...] [-q|-Q] [-p opts] [-s          arg...]
-  shall [-w shellA,...]  -i
 
-DESCRIPTION
-  Invokes a shell script or command with multiple POSIX-like shells in
-  sequence for cross-shell compatibility testing.
+Cross-POSIX-compatible-shell testing:
 
-  Pass a *script filename* as the first operand, optionally followed by 
-  arguments to pass to the script.
-  If shall is in your PATH, you can also create executable scripts
-  based on it by using the following shebang line:
-    #!/usr/bin/env shall
-  
-  Use -c to specify a *command string* instead; note that the first argument
-  after the command string is assigned to $0(!).
-  
-  Use -s to read from *stdin*; -s is optional, if no arguments are passed.
-  
-  Use -i to enter *interactive mode*: a simple REPL, where one command
-  at a time is read from the terminal and executed.
+Run a script file:
 
-  By default, the following shells - if installed - are targeted:
-    sh, dash, bash, zsh, ksh
+    shall [-w <shellA>,...] [-q|-Q] [-p <opts>]     <script> [<arg>...]
 
-  To specify shells explicitly, use either of the following (in order of
-  precedence):
-   - Option -w shellA,...; e.g., shall -w bash,zsh ...
-   - Environment variable 'SHELLS'; e.g.: SHELLS=bash,zsh shall ...
+Execute a command string:
 
-  -q, -Q
-    Quiet modes: 
-     -q suppresses stdout output from the command/script invoked.
-     -Q suppresses both stdout and stderr.
-    Note that per-shell and overall success status information is still
-    reported.
+    shall [-w <shellA>,...] [-q|-Q] [-p <opts>]  -c <cmd>    [<arg0> <arg>...]
 
-  -p 
-    Allows you to pass options through to the shells invoked, as a single
-    argument; e.g., -p '-e -o noglob'
-    Make sure all shells targeted support the specified options; all
-    POSIX-like should support the same options as the `set` builtin
-    (see http://is.gd/MJPvPr).
+Execute commands specified via stdin:
 
-NOTES
-  The exit code reflects the number of shells that reported failure; i.e.,
-  it is 0 if all shells ran the command successfully.
+    shall [-w <shellA>,...] [-q|-Q] [-p <opts>] [-s           <arg>...]
 
-  Output is selectively colored, but only when outputting to a terminal.
-  Note that only shall's *own* errors are sent to stderr, whereas
-  captured command/script output (interleaved stdout and stderr) is always
-  reported via stdout.
-  When outputting to a terminal and a command/script's invocation fails for a
-  given shell, the (entire) output captured is printed in red.
-  
-  Timing information is reported for each shell.
-  
-  In interactive mode (-i), history is maintained in file $HOME/.shall_history
-  
-  To get the name of the running shell from within your code in any of the
-  invocation scenarios, use:
-    $(ps -o comm= $$)
-  When using a command string (-c) or stdin input (-s), you can also
-  use $0
+Start a REPL (run commands interactively):
 
-EXAMPLES
-    # Echo the name of each executing shell.
-  shall -c 'echo "Hello from $0."'
-    # Also echo the 1st argument passed.                
-  echo 'echo "Passed to $0: $1"' | shall -s one
-    # Execute a script, passing the -e shell option (abort on errror).
-  shall -p '-e' someScript
-    # Print the type of the 'which' command in bash and zsh.
-  shall -w bash,zsh -c 'type which'
-    # Enter a REPL that evaluates commands in both bash and dash.
-  SHELLS=bash,dash shall -i
-  
+    shall [-w <shellA>,...]  -i
+
+Default shells targeted are sh, and, if installed, dash, bash, zsh, ksh.  
+Override with -w or environment variable SHELLS, using a comma-separated  
+list without spaces; e.g., -w bash,ksh,zsh or SHELLS=bash,ksh,zsh.
+
+-q, -Q quiets stdout, stdout + stderr from the script / commands invoked.  
+-p passes options through to the target shells.
+
+Standard options: --help, --man, --version, --home
 ```
 
 <!-- DO NOT EDIT THE NEXT CHAPTER and RETAIN THIS COMMENT: The next chapter is updated by `make update-readme/release` with the contents of 'LICENSE.md'. ALSO, LEAVE AT LEAST 1 BLANK LINE AFTER THIS COMMENT. -->
@@ -194,6 +150,7 @@ This project gratefully depends on the following open-source components, accordi
 
 * [doctoc (D)](https://github.com/thlorenz/doctoc)
 * [json (D)](https://github.com/trentm/json)
+* [marked-man (D)](https://github.com/kapouer/marked-man#readme)
 * [replace (D)](https://github.com/harthur/replace)
 * [semver (D)](https://github.com/isaacs/node-semver)
 * [urchin (D)](https://github.com/tlevine/urchin)
@@ -205,6 +162,10 @@ This project gratefully depends on the following open-source components, accordi
 Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
+
+* **[v0.2.6](https://github.com/mklement0/shall/compare/v0.2.5...v0.2.6)** (2015-09-19):
+  * [doc] `man` now has a man page (if manually installed, use `man --man`);
+          `man -h` now just prints concise usage information.
 
 * **[v0.2.5](https://github.com/mklement0/shall/compare/v0.2.4...v0.2.5)** (2015-09-15):
   * [dev] Makefile improvements; various other behind-the-scenes tweaks.
