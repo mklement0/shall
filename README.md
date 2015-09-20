@@ -163,9 +163,14 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **[v0.2.7](https://github.com/mklement0/shall/compare/v0.2.6...v0.2.7)** (2015-09-20):
+  * [dev] Confusing changelog typos fixed.
+  * [dev] Removed post-install command that verifies presence of Bash, because
+    `npm` always _prints_ the command during installation, which can be confusing.  
+
 * **[v0.2.6](https://github.com/mklement0/shall/compare/v0.2.5...v0.2.6)** (2015-09-19):
-  * [doc] `man` now has a man page (if manually installed, use `man --man`);
-          `man -h` now just prints concise usage information.
+  * [doc] `shall` now has a man page (if manually installed, use `shall --man`);
+          `shall -h` now just prints concise usage information.
 
 * **[v0.2.5](https://github.com/mklement0/shall/compare/v0.2.4...v0.2.5)** (2015-09-15):
   * [dev] Makefile improvements; various other behind-the-scenes tweaks.
