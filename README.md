@@ -61,7 +61,7 @@ echo 'echo "Passed to $0: $1"' | shall -s one
 shall foo-script bar
 
 # Print the type of the 'which' command in Bash and Zsh.
-shall -l bash,zsh -c 'type which'
+shall -w bash,zsh -c 'type which'
 
 # Enter a REPL that evaluates commands in both Bash and Dash.
 SHELLS=bash,dash shall -i
@@ -162,6 +162,10 @@ This project gratefully depends on the following open-source components, accordi
 Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
+
+* **[v0.2.8](https://github.com/mklement0/shall/compare/v0.2.7...v0.2.8)** (2015-10-23):
+  * [doc] `README.md` examples still contained obsolete `-l` switch.
+  * [dev] Improved robustness of internal `rreadlink()` function.
 
 * **[v0.2.7](https://github.com/mklement0/shall/compare/v0.2.6...v0.2.7)** (2015-09-20):
   * [dev] Confusing changelog typos fixed.

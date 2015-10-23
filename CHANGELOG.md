@@ -4,6 +4,10 @@ Versioning complies with [semantic versioning (semver)](http://semver.org/).
 
 <!-- NOTE: An entry template is automatically added each time `make version` is called. Fill in changes afterwards. -->
 
+* **[v0.2.8](https://github.com/mklement0/shall/compare/v0.2.7...v0.2.8)** (2015-10-23):
+  * [doc] `README.md` examples still contained obsolete `-l` switch.
+  * [dev] Improved robustness of internal `rreadlink()` function.
+
 * **[v0.2.7](https://github.com/mklement0/shall/compare/v0.2.6...v0.2.7)** (2015-09-20):
   * [dev] Confusing changelog typos fixed.
   * [dev] Removed post-install command that verifies presence of Bash, because

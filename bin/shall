@@ -4,7 +4,7 @@
 
 kTHIS_NAME=${BASH_SOURCE##*/}
 kTHIS_HOMEPAGE='https://github.com/mklement0/shall'
-kTHIS_VERSION='v0.2.7' # NOTE: This assignment is automatically updated by `make version VER=<newVer>` - DO keep the 'v' prefix.
+kTHIS_VERSION='v0.2.8' # NOTE: This assignment is automatically updated by `make version VER=<newVer>` - DO keep the 'v' prefix.
 
 unset CDPATH  # To prevent unexpected `cd` behavior.
 
@@ -179,43 +179,64 @@ statusMark() {
 }
 
 # SYNOPSIS
-#   rreadlink symlink
+#   rreadlink <fileOrDirPath>
 # DESCRIPTION
-#   Outputs the canonical path of the specified symlink's ultimate target.
-#   If the argument is not a symlink, its own canonical path is output.
+#   Prints the canonical path of the specified symlink's ultimate target.
+#   If the argument is not a symlink, its own canonical path is output; note
+#   that this means that if a non-symlink argument has symlinks in its
+#   *directory* path, they are resolved to their ultimate target.
+#   A broken symlink causes an error that reports the non-existent target.
 # NOTES
-#   Attempts to use `readlink`, which is found on most modern platforms (notable exception: HP-UX)
-#   If `readlink` is not available, output from `ls -l` is parsed, which is the only POSIX-compliant
-#   way to determine a symlink's target; caveat: if a filename contains literal ' -> ', this will break.
+#   Attempts to use `readlink`, which is found on most modern platforms
+#   (notable exception: HP-UX). If `readlink` is not available, output from
+#   `ls -l` is parsed, which is the only POSIX-compliant way to determine a 
+#    symlink's target.
+#    Caveat: This will break if a filename contains literal ' -> ' or has 
+#            embedded newlines.
 # THANKS
 #   Gratefully adapted from http://stackoverflow.com/a/1116890/45375
-rreadlink() ( # execute function in a *subshell* to localize the effect of `cd`.
+rreadlink() ( # execute function in a *subshell* to localize the effect of `cd`, ...
 
-  local target=$1 fname targetDir readlinkexe=$(command -pv readlink) CDPATH= 
+  local target=$1 fname targetDir readlinkexe=$(command -v readlink) CDPATH= 
+
+  # Since we'll be using `command` below for a predictable execution
+  # environment, we make sure that it has its original meaning.
+  { \unalias command; \unset -f command; } &>/dev/null
 
   while :; do # Resolve potential symlinks until the ultimate target is found.
-      [[ -L $target || -e $target ]] || { printf '%s\n' "$FUNCNAME: ERROR: '$target' does not exist." >&2; return 1; }
-      builtin cd "$(command -p dirname "$target")" # Change to target dir; necessary for correct resolution of target path.
-      fname=$(command -p basename "$target") # Extract filename.
+      [[ -L $target || -e $target ]] || { command printf '%s\n' "$FUNCNAME: ERROR: '$target' does not exist." >&2; return 1; }
+      command cd "$(command dirname -- "$target")" # Change to target dir; necessary for correct resolution of target path.
+      fname=$(command basename -- "$target") # Extract filename.
+      [[ $fname == '/' ]] && fname='' # !! curiously, `basename /` returns '/'
       if [[ -L $fname ]]; then
         # Extract [next] target path, which is defined
         # relative to the symlink's own directory.
         if [[ -n $readlinkexe ]]; then # Use `readlink`.
-          target=$("$readlinkexe" "$fname")
+          target=$("$readlinkexe" -- "$fname")
         else # `readlink` utility not available.
-          # Parse `ls -l` output, which is the only POSIX-compliant way
-          # to determine a symlink's target.
-          target=$(command -p ls -l "$fname")
+          # Parse `ls -l` output, which, unfortunately, is the only POSIX-compliant 
+          # way to determine a symlink's target. Hypothetically, this can break with
+          # filenames containig literal ' -> ' and embedded newlines.
+          target=$(command ls -l -- "$fname")
           target=${target#* -> }
         fi
         continue # Resolve [next] symlink target.
       fi
       break # Ultimate target reached.
   done
-  targetDir=$(builtin pwd -P) # Get canonical dir. path
+  targetDir=$(command pwd -P) # Get canonical dir. path
   # Output the ultimate target's canonical path.
-  printf '%s\n' "${targetDir%/}/$fname"
-
+  # Note that we manually resolve paths ending in /. and /.. to make sure we
+  # have a normalized path.
+  if [[ $fname == '.' ]]; then
+    command printf '%s\n' "${targetDir%/}"
+  elif  [[ $fname == '..' ]]; then
+    # Caveat: something like /var/.. will resolve to /private (assuming
+    # /var@ -> /private/var), i.e. the '..' is applied AFTER canonicalization.
+    command printf '%s\n' "$(command dirname -- "${targetDir}")"
+  else
+    command printf '%s\n' "${targetDir%/}/$fname"
+  fi
 )
 
 # --- MAIN BODY
